@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::scheme::{
-    builtins, parser::{Error, Literal, Scope, Token, lex}, utils::describe,
+    builtins, datatypes::Value, parser::{Error, Literal, Scope, Token, lex}, utils::describe
 };
 use log::{debug, error, trace, warn};
 use std::collections::HashMap;
@@ -37,18 +37,6 @@ impl NativeFn {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum Value {
-    /// Atom is a single, non-quoted word used as enumeration
-    Atom(String),
-    Str(String),
-    Int(i64),
-    Float(f64),
-    Lit(Literal),
-    Builtin(NativeFn),
-    Bool(bool),
-}
-
 #[derive(Clone, Debug, Default)]
 pub struct EngineConfig {
     pub display_flushes: bool,
@@ -73,6 +61,8 @@ impl Engine {
         e.reg_builtin("number?", Some(1), builtins::is_number);
         e.reg_builtin("integer?", Some(1), builtins::is_int);
         e.reg_builtin("eqv?", Some(2), builtins::eqv);
+        
+        // e.reg_builtin("not", Some(1), builtins::not);
         
         e.reg_builtin("+", Some(2), builtins::add);
 

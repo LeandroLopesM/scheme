@@ -2,7 +2,7 @@ use std::io::{Write, stdout};
 
 use log::{debug, trace, warn};
 
-use crate::scheme::{engine::{Engine, Value}, parser::Literal};
+use crate::scheme::{datatypes::{Number, Value}, engine::Engine, parser::Literal};
 
 macro_rules! builtin {
     ($name:ident, $eng:ident, $ct:block) => {
@@ -41,24 +41,22 @@ builtin!{
     add, e, {
         let rhs =
             match e.stack.pop().unwrap() {
-                Value::Int(i) => i,
-                Value::Lit(Literal::Int(i)) => i,
+                Value::Number(n) => n,
+                Value::Lit(Literal::Int(i)) => Number::Int(i),
                 v => {
-                    return Err(format!("Expected string, got {v:?}"))
+                    return Err(format!("Expected number, got {v:?}"))
                 }
             };
         let lhs =
         match e.stack.pop().unwrap() {
-            Value::Int(i) => i,
-            Value::Lit(Literal::Int(i)) => i,
+            Value::Number(i) => i,
+            Value::Lit(Literal::Int(i)) => Number::Int(i),
             v => {
-                return Err(format!("Expected string, got {v:?}"))
+                return Err(format!("Expected number, got {v:?}"))
             }
         };
 
-        trace!("Result was: {}", lhs + rhs);
-
-        e.stack.push(Value::Int(lhs + rhs));
+        e.stack.push(Value::Number(lhs + rhs));
 
         Ok(())
     }
