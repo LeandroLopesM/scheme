@@ -1,4 +1,6 @@
-use log::{trace, debug};
+use std::io::{Write, stdout};
+
+use log::{debug, trace, warn};
 
 use crate::scheme::{engine::{Engine, Value}, parser::Literal};
 
@@ -16,6 +18,14 @@ builtin! {
         let val = e.stack.pop().unwrap();
 
         print!("{val}");
+
+        if e.config.display_flushes {
+            if let Err(err) = stdout().flush() {
+                warn!("Engine configuration failed, unsetting CFG::DisplayFlushes\nError: {err}");
+                e.config.display_flushes = false;
+            }
+        }
+
         Ok(())
     }
 }
@@ -32,7 +42,7 @@ builtin!{
         let rhs =
             match e.stack.pop().unwrap() {
                 Value::Int(i) => i,
-                Value::Lit(Literal::Num(i)) => i,
+                Value::Lit(Literal::Int(i)) => i,
                 v => {
                     return Err(format!("Expected string, got {v:?}"))
                 }
@@ -40,7 +50,7 @@ builtin!{
         let lhs =
         match e.stack.pop().unwrap() {
             Value::Int(i) => i,
-            Value::Lit(Literal::Num(i)) => i,
+            Value::Lit(Literal::Int(i)) => i,
             v => {
                 return Err(format!("Expected string, got {v:?}"))
             }
@@ -56,10 +66,10 @@ builtin!{
 
 builtin! {
     is_bool, e, {
-        if let Some(Value::Bool(_)) = e.stack.pop() {
-            e.stack.push(Value::Bool(true))
-        } else {
-            e.stack.push(Value::Bool(false))
+        match e.stack.pop() {
+            Some(Value::Bool(_)) => e.stack.push(Value::Bool(true)),
+            Some(Value::Lit(Literal::Bool(_))) => e.stack.push(Value::Bool(true)),
+            _ => e.stack.push(Value::Bool(false))
         }
 
         Ok(())
@@ -67,12 +77,14 @@ builtin! {
 }
 builtin! {
     is_number, e, {
-        if let Some(Value::Int(_)) = e.stack.pop() {
-            e.stack.push(Value::Bool(true))
-        } else if let Some(Value::Float(_)) = e.stack.pop() {
-            e.stack.push(Value::Bool(true))
-        } else {
-            e.stack.push(Value::Bool(false))
+        match e.stack.pop() {
+            Some(Value::Int(_)) => e.stack.push(Value::Bool(true)),
+            Some(Value::Lit(Literal::Int(_))) => e.stack.push(Value::Bool(true)),
+            
+            Some(Value::Float(_)) => e.stack.push(Value::Bool(true)),
+            Some(Value::Lit(Literal::Float(_))) => e.stack.push(Value::Bool(true)),
+
+            _ => e.stack.push(Value::Bool(false))
         }
 
         Ok(())
@@ -80,10 +92,11 @@ builtin! {
 }
 builtin! {
     is_int, e, {
-        if let Some(Value::Int(_)) = e.stack.pop() {
-            e.stack.push(Value::Bool(true))
-        } else {
-            e.stack.push(Value::Bool(false))
+        match e.stack.pop() {
+            Some(Value::Int(_)) => e.stack.push(Value::Bool(true)),
+            Some(Value::Lit(Literal::Int(_))) => e.stack.push(Value::Bool(true)),
+
+            _ => e.stack.push(Value::Bool(false))
         }
 
         Ok(())

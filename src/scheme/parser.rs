@@ -28,7 +28,7 @@ impl Error {
 #[derive(Clone, Debug, PartialEq)]
 #[allow(dead_code)]
 pub enum Literal {
-    Num(i64),
+    Int(i64),
     Float(f64),
     Str(String),
     Bool(bool),
@@ -134,13 +134,15 @@ pub fn parse_scope(
             '#' => {
                 _  = iter.next();
 
-                if let Some('t') = iter.next() {
-                    out.push(Token::new(TokenKind::Literal(Literal::Bool(true)), *line))
-                } else if let Some('f') = iter.next() {
-                    out.push(Token::new(TokenKind::Literal(Literal::Bool(false)), *line))
-                } else {
-                    return Err(Error::new(*line, "Invalid boolean literal"));
+                let b = iter.peek();
+
+                match b {
+                    Some('t') => out.push(Token::new(TokenKind::Literal(Literal::Bool(true)), *line)),
+                    Some('f') => out.push(Token::new(TokenKind::Literal(Literal::Bool(false)), *line)),
+                    _ => return Err(Error::new(*line, "Invalid boolean literal")),
                 }
+
+                _ = iter.next();
             }
 
             '0'..'9' => {
@@ -215,7 +217,7 @@ fn parse_num(
     iter: &mut Peekable<impl Iterator<Item = char>>,
     line: u32,
 ) -> Result<TokenKind, Error> {
-    let mut n = Literal::Num(0);
+    let mut n = Literal::Int(0);
     let mut buffer = String::new();
     let mut radix = 10;
 
@@ -240,11 +242,11 @@ fn parse_num(
         _ = iter.next();
     }
 
-    if let Literal::Num(_) = n {
+    if let Literal::Int(_) = n {
         trace!("Intlit: ({radix}) {buffer}");
 
         match i64::from_str_radix(&buffer, radix) {
-            Ok(n) => return Ok(TokenKind::Literal(Literal::Num(n))),
+            Ok(n) => return Ok(TokenKind::Literal(Literal::Int(n))),
             Err(e) => {
                 return Err(Error {
                     msg: format!("Invalid {} number '{}'\n{e}", readable_radix(radix), buffer),

@@ -9,6 +9,7 @@ use std::collections::HashMap;
 type BuiltinFn = fn(&mut Engine) -> Result<(), String>;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[allow(unpredictable_function_pointer_comparisons)]
 pub struct NativeFn {
     argc: Option<u32>,
     call: BuiltinFn,
@@ -48,10 +49,17 @@ pub enum Value {
     Bool(bool),
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct EngineConfig {
+    pub display_flushes: bool,
+}
+
 #[derive(Default)]
 pub struct Engine {
     global: HashMap<String, Value>,
     pub stack: Vec<Value>,
+
+    pub config: EngineConfig
 }
 
 impl Engine {
@@ -64,7 +72,6 @@ impl Engine {
         e.reg_builtin("boolean?", Some(1), builtins::is_bool);
         e.reg_builtin("number?", Some(1), builtins::is_number);
         e.reg_builtin("integer?", Some(1), builtins::is_int);
-        
         e.reg_builtin("eqv?", Some(2), builtins::eqv);
         
         e.reg_builtin("+", Some(2), builtins::add);
