@@ -68,7 +68,7 @@ func MkInt(v int64) Unit {
 		Value: v,
 	}
 }
-func MkFloat(v float32) Unit {
+func MkFloat(v float64) Unit {
 	return Unit{
 		Type:  Float,
 		Value: v,

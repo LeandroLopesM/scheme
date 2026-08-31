@@ -169,7 +169,7 @@ func (lex *Lexer) parseNum() (Unit, error) {
 
 	v, e := lex.iter.Curr()
 	for e == nil {
-		if !unicode.IsDigit(*v) && !isHex(*v) && !isPrefix(*v) {
+		if !unicode.IsDigit(*v) && !isHex(*v) && !isPrefix(*v) && *v != '.' {
 			_,_ = lex.iter.Prev();
 			break
 		}
@@ -202,7 +202,7 @@ func (lex *Lexer) parseNum() (Unit, error) {
 		radix = 10
 	}
 
-	if val, err := strconv.ParseInt(asStr, radix, 32); err != nil {
+	if val, err := strconv.ParseInt(asStr, radix, 64); err != nil {
 		return Unit{}, lex.Error(fmt.Sprintf("Invalid integer literal '%v'", asStr))
 	} else {
 		return Unit{

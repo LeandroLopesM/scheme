@@ -16,7 +16,7 @@ func PrintUnit(unit Unit) {
 	case SchemeType:
 		fmt.Printf("Scheme<%s>", unit.Value.(Scheme).Name)
 	case Float:
-		fmt.Printf("%f", unit.Value.(float32))
+		fmt.Printf("%f", unit.Value.(float64))
 	case Integer:
 		fmt.Printf("%d", unit.Value.(int64))
 	case String:
@@ -37,7 +37,7 @@ func debugUnit(unit Unit, depth int) {
 			debugUnit(member, depth+1)
 		}
 	case Float:
-		log.Infof("%sFloat %.1f", repeat(depth), unit.Value.(float32))
+		log.Infof("%sFloat %.1f", repeat(depth), unit.Value.(float64))
 	case Integer:
 		log.Infof("%sInt %v", repeat(depth), unit.Value.(int64))
 	case String:

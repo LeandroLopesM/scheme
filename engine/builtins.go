@@ -42,13 +42,13 @@ func add(e *Engine) error {
 
 	switch outType {
 	case Float:
-		var out float32 = 0.
+		var out float64 = 0.
 		for _,num := range numbers {
 			switch num.Type {
 			case Float:
-				out += num.Value.(float32)
+				out += num.Value.(float64)
 			default:
-				out += float32(num.Value.(int64))
+				out += float64(num.Value.(int64))
 			}
 		}
 
