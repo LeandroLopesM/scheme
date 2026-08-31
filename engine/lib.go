@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 
+	"github.com/charmbracelet/log"
 	. "github.com/leandrolopesm/scheme-go/core"
 	"github.com/leandrolopesm/scheme-go/parser"
 )
@@ -59,8 +60,10 @@ func (self *Engine) ExecuteStr(code string) error {
 		return err
 	}
 
-	for _,scheme := range schemes {
-		DebugUnit(scheme);
+	if log.GetLevel() == log.DebugLevel {
+		for _,scheme := range schemes {
+			DebugUnit(scheme);
+		}
 	}
 	
 	for _,scheme := range schemes {

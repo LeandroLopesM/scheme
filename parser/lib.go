@@ -6,7 +6,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/charmbracelet/log"
 	. "github.com/leandrolopesm/scheme-go/core"
 )
 
@@ -229,7 +228,6 @@ func (lex *Lexer) parseStr() (Unit, error) {
 	}
 
 	if e != nil {
-		log.Info("Strings in scheme end with \"\"!")
 		return Unit{}, lex.Error(fmt.Sprintf("Unclosed string ..\"%s\"..", stringAround(5, lex.iter.elems, start)))
 	}
 

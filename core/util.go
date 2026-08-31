@@ -32,16 +32,16 @@ func debugUnit(unit Unit, depth int) {
 	switch unit.Type {
 	case SchemeType:
 		asGroup := unit.Value.(Scheme)
-		log.Infof("%sScheme '%s'", repeat(depth), asGroup.Name)
+		log.Debugf("%sScheme '%s'", repeat(depth), asGroup.Name)
 		for _, member := range asGroup.Args {
 			debugUnit(member, depth+1)
 		}
 	case Float:
-		log.Infof("%sFloat %.1f", repeat(depth), unit.Value.(float64))
+		log.Debugf("%sFloat %.1f", repeat(depth), unit.Value.(float64))
 	case Integer:
-		log.Infof("%sInt %v", repeat(depth), unit.Value.(int64))
+		log.Debugf("%sInt %v", repeat(depth), unit.Value.(int64))
 	case String:
-		log.Infof("%sString %s", repeat(depth), unit.Value.(string))
+		log.Debugf("%sString %s", repeat(depth), unit.Value.(string))
 	default:
 		log.Warnf("%sUnknown %v", repeat(depth), unit.Value)
 	}
