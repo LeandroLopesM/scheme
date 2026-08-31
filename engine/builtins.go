@@ -1,18 +1,68 @@
 package engine
 
 import (
+	"fmt"
+
 	. "github.com/leandrolopesm/scheme-go/core"
 )
 
 func (self *Engine) RegisterBuiltins() {
-	self.AddFunc("display", []Type{Any}, false, display)
-	self.AddFunc("newline", []Type{}, false, newline)
+	self.AddFunc("display", []TypeFilter{Any}, false, display)
+	self.AddFunc("newline", []TypeFilter{}, false, newline)
 
-	self.AddFunc("boolean?", []Type{Any, Any}, true, isX(Bool))
-	self.AddFunc("integer?", []Type{Any}, false, isX(Integer))
-	self.AddFunc("rational?", []Type{Any}, false, isX(Float))
+	self.AddFunc("boolean?", []TypeFilter{Any}, false, isX(Bool))
+	self.AddFunc("integer?", []TypeFilter{Any}, false, isX(Integer))
+	self.AddFunc("rational?", []TypeFilter{Any}, false, isX(Float))
 
-	self.AddFunc("eqv", []Type{Any, Any}, true, eqv)
+	self.AddFunc("+", []TypeFilter{Any}, true, add)
+
+	self.AddFunc("eqv", []TypeFilter{Any, Any}, true, eqv)
+}
+
+func add(e *Engine) error {
+	filter := NumberFt
+	var numbers []Unit
+	var outType Type = Integer // We can be optimistic, right?
+
+	v, err := e.Pop();
+
+	for err == nil {
+		if !filter.Matches(v.Type) {
+			return fmt.Errorf("Expected integer or float, got %s", TypeNames[v.Type])
+		}
+
+		if v.Type == Float {
+			outType = Float
+		}
+
+		numbers = append(numbers, v)
+		
+		v, err = e.Pop()
+	}
+
+	switch outType {
+	case Float:
+		var out float32 = 0.
+		for _,num := range numbers {
+			switch num.Type {
+			case Float:
+				out += num.Value.(float32)
+			default:
+				out += float32(num.Value.(int64))
+			}
+		}
+
+		e.Push(MkFloat(out))
+	default:
+		var out int64 = 0.
+		for _,num := range numbers {
+			out += num.Value.(int64)
+		}
+
+		e.Push(MkInt(out))
+	}
+
+	return nil
 }
 
 func isX(which Type) BuiltinExec {

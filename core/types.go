@@ -5,13 +5,44 @@ type Scheme struct {
 	Args []Unit
 }
 
+var TypeFilterNames = map[TypeFilter](string){
+	IdentFt:   "Identifier",
+	IntegerFt: "Integer",
+	FloatFt:   "Float",
+	BoolFt:    "Bool",
+	StringFt:  "String",
+	Any:       "Any",
+}
+
 var TypeNames = map[Type](string){
 	Ident:   "Identifier",
 	Integer: "Integer",
 	Float:   "Float",
 	Bool:    "Bool",
 	String:  "String",
-	Any:     "Any",
+}
+
+type TypeFilter int
+
+const (
+	NumberFt TypeFilter = iota
+	IdentFt
+	IntegerFt
+	FloatFt
+	BoolFt
+	StringFt
+	Any
+)
+
+func (tf TypeFilter) Matches(ty Type) bool {
+	switch tf {
+	case Any:
+		return true
+	case NumberFt:
+		return ty == Integer || ty == Float
+	default:
+		return ty == Type(tf-1)
+	}
 }
 
 type Type int
@@ -23,8 +54,6 @@ const (
 	Float
 	Bool
 	String
-
-	Any // Only used in builtin function definitions
 )
 
 type Unit struct {
@@ -33,7 +62,7 @@ type Unit struct {
 	Value any
 }
 
-func MkNumber(v int64) Unit {
+func MkInt(v int64) Unit {
 	return Unit{
 		Type:  Integer,
 		Value: v,

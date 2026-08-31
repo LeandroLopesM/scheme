@@ -10,7 +10,7 @@ import (
 type BuiltinExec func(e *Engine) error
 
 type Builtin struct {
-	Args []Type
+	Args []TypeFilter
 	VarArgs bool
 
 	Ret Type
@@ -84,26 +84,27 @@ func (self *Engine) checkScheme(scheme Scheme) error {
 	}
 
 	if len(scheme.Args) != len(actualFn.Args) && !actualFn.VarArgs {
-		return fmt.Errorf("Scheme '%s': Expected %d args, got %d", scheme.Name, actualFn.Args, scheme.Args)
+		return fmt.Errorf("Scheme '%s': Expected %d args, got %d", scheme.Name, len(actualFn.Args), len(scheme.Args))
 	}
 
 	for idx := range actualFn.Args {
 		inType := scheme.Args[idx].Type
 
-		if scheme.Args[idx].Type == SchemeType {
+		if scheme.Args[idx].Type == SchemeType { 
 			asScheme := scheme.Args[idx].Value.(Scheme);
 			if e := self.checkScheme(asScheme); e != nil {
 				return e
 			}
 
+			// If the function exists, use it's return value as the type
 			inType = self.funcs[asScheme.Name].Ret
 		}
 
-		if inType != actualFn.Args[idx] && actualFn.Args[idx] != Any {
+		if !actualFn.Args[idx].Matches(inType) {
 			return fmt.Errorf(
 				"Incorrect argument type for '%s'. Expected '%s' got '%s'",
 				scheme.Name,
-				TypeNames[actualFn.Args[idx]],
+				TypeFilterNames[actualFn.Args[idx]],
 				TypeNames[inType],
 			)
 		}
@@ -130,7 +131,7 @@ func (self *Engine) runScheme(scheme Scheme) error {
 	}
 }
 
-func (self *Engine) AddFunc(name string, args []Type, isVarArg bool, call BuiltinExec) error {
+func (self *Engine) AddFunc(name string, args []TypeFilter, isVarArg bool, call BuiltinExec) error {
 	for k := range self.funcs {
 		if k == name {
 			return fmt.Errorf("Attemt to redeclare function %s", name)
