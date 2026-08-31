@@ -14,55 +14,82 @@ func (self *Engine) RegisterBuiltins() {
 	self.AddFunc("integer?", []TypeFilter{Any}, false, isX(Integer))
 	self.AddFunc("rational?", []TypeFilter{Any}, false, isX(Float))
 
-	self.AddFunc("+", []TypeFilter{Any}, true, add)
+	self.AddFunc("+", []TypeFilter{Any}, true, VarOp('+'))
+	self.AddFunc("-", []TypeFilter{Any}, true, VarOp('-'))
+	self.AddFunc("*", []TypeFilter{Any}, true, VarOp('*'))
+	self.AddFunc("/", []TypeFilter{Any}, true, VarOp('/'))
 
 	self.AddFunc("eqv", []TypeFilter{Any, Any}, true, eqv)
 }
 
-func add(e *Engine) error {
-	filter := NumberFt
-	var numbers []Unit
-	var outType Type = Integer // We can be optimistic, right?
-
-	v, err := e.Pop();
-
-	for err == nil {
-		if !filter.Matches(v.Type) {
-			return fmt.Errorf("Expected integer or float, got %s", TypeNames[v.Type])
+func VarOp(kind rune) BuiltinExec {
+	floatOp := func (a float64, b float64) float64 {
+		switch kind {
+			case '+': return a + b
+			case '-': return a - b
+			case '*': return a * b
+			case '/': return a / b
 		}
 
-		if v.Type == Float {
-			outType = Float
+		panic(fmt.Sprintf("Undefined operation %c", kind))
+	}
+	
+	intOp := func (a int64, b int64) int64 {
+		switch kind {
+			case '+': return a + b
+			case '-': return a - b
+			case '*': return a * b
+			case '/': return a / b
 		}
 
-		numbers = append(numbers, v)
-		
-		v, err = e.Pop()
+		panic(fmt.Sprintf("Undefined operation %c", kind))
 	}
 
-	switch outType {
-	case Float:
-		var out float64 = 0.
-		for _,num := range numbers {
-			switch num.Type {
-			case Float:
-				out += num.Value.(float64)
-			default:
-				out += float64(num.Value.(int64))
+	return func (e *Engine) error {
+		filter := NumberFt
+		var numbers []Unit
+		var outType Type = Integer // We can be optimistic, right?
+
+		v, err := e.Pop();
+
+		for err == nil {
+			if !filter.Matches(v.Type) {
+				return fmt.Errorf("Expected integer or float, got %s", TypeNames[v.Type])
 			}
+
+			if v.Type == Float {
+				outType = Float
+			}
+
+			numbers = append(numbers, v)
+			
+			v, err = e.Pop()
 		}
 
-		e.Push(MkFloat(out))
-	default:
-		var out int64 = 0.
-		for _,num := range numbers {
-			out += num.Value.(int64)
+		switch outType {
+		case Float:
+			var out float64 = 0.
+			for _,num := range numbers {
+				switch num.Type {
+				case Float:
+					out = floatOp(out, num.Value.(float64))
+				default:
+					out = floatOp(out, float64(num.Value.(int64)))
+				}
+			}
+
+			e.Push(MkFloat(out))
+		default:
+			var out int64 = 0.
+			for _,num := range numbers {
+				out = intOp(out, num.Value.(int64))
+			}
+
+			e.Push(MkInt(out))
 		}
 
-		e.Push(MkInt(out))
+		return nil
 	}
-
-	return nil
 }
 
 func isX(which Type) BuiltinExec {
