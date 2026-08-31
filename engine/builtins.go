@@ -2,7 +2,9 @@ package engine
 
 import (
 	"fmt"
+	"math"
 
+	"github.com/charmbracelet/log"
 	. "github.com/leandrolopesm/scheme-go/core"
 )
 
@@ -14,12 +16,41 @@ func (self *Engine) RegisterBuiltins() {
 	self.AddFunc("integer?", []TypeFilter{Any}, false, isX(Integer))
 	self.AddFunc("rational?", []TypeFilter{Any}, false, isX(Float))
 
-	self.AddFunc("+", []TypeFilter{Any}, true, VarOp('+'))
-	self.AddFunc("-", []TypeFilter{Any}, true, VarOp('-'))
-	self.AddFunc("*", []TypeFilter{Any}, true, VarOp('*'))
-	self.AddFunc("/", []TypeFilter{Any}, true, VarOp('/'))
+	self.AddFunc("+", []TypeFilter{NumberFt}, true, VarOp('+'))
+	self.AddFunc("-", []TypeFilter{NumberFt}, true, VarOp('-'))
+	self.AddFunc("*", []TypeFilter{NumberFt}, true, VarOp('*'))
+	self.AddFunc("/", []TypeFilter{NumberFt}, true, VarOp('/'))
+	
+	self.AddFunc("expt", []TypeFilter{NumberFt}, true, expt)
 
 	self.AddFunc("eqv", []TypeFilter{Any, Any}, true, eqv)
+}
+
+func numAsF(num Unit) float64 {
+	switch num.Type {
+	case Float:
+		return num.Value.(float64)
+	default:
+		return float64(num.Value.(int64))
+	}
+}
+
+func expt(e *Engine) error {
+	lhs, lErr := e.Pop();
+	rhs, rErr := e.Pop();
+
+	if lErr != nil {
+		return lErr
+	} else if rErr != nil {
+		return rErr
+	}
+
+	var lFloat float64 = numAsF(lhs)
+	var rFloat float64 = numAsF(rhs)
+	
+	e.Push(MkFloat(math.Pow(lFloat, rFloat)))
+
+	return nil
 }
 
 func VarOp(kind rune) BuiltinExec {
@@ -35,6 +66,7 @@ func VarOp(kind rune) BuiltinExec {
 	}
 	
 	intOp := func (a int64, b int64) int64 {
+		log.Infof("A/B %v/%v", a, b)
 		switch kind {
 			case '+': return a + b
 			case '-': return a - b
@@ -68,20 +100,15 @@ func VarOp(kind rune) BuiltinExec {
 
 		switch outType {
 		case Float:
-			var out float64 = 0.
-			for _,num := range numbers {
-				switch num.Type {
-				case Float:
-					out = floatOp(out, num.Value.(float64))
-				default:
-					out = floatOp(out, float64(num.Value.(int64)))
-				}
+			var out float64 = numAsF(numbers[0])
+			for _,num := range numbers[1:] {
+				out = floatOp(out, numAsF(num))
 			}
 
 			e.Push(MkFloat(out))
 		default:
-			var out int64 = 0.
-			for _,num := range numbers {
+			var out int64 = numbers[0].Value.(int64)
+			for _,num := range numbers[1:] {
 				out = intOp(out, num.Value.(int64))
 			}
 

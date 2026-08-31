@@ -1,2 +1,2 @@
-(display (+ 1 2))
+(display (/ 5.5 2))
 (newline)
