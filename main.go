@@ -8,7 +8,7 @@ import (
 	"github.com/leandrolopesm/scheme-go/util"
 )
 
-const VERSION = "0.2.0";
+const VERSION = "0.2.1";
 
 func main() {
 	util.Logger()
