@@ -4,6 +4,7 @@ go 1.27.0
 
 require (
 	github.com/charmbracelet/log v1.0.0
+	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/nyaosorg/go-readline-ny v1.15.1
 )
 

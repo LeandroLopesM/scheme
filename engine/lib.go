@@ -1,17 +1,20 @@
 package engine
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/log"
 	. "github.com/leandrolopesm/scheme-go/core"
 	"github.com/leandrolopesm/scheme-go/parser"
+	"github.com/logrusorgru/aurora/v4"
 )
 
 type BuiltinExec func(e *Engine) error
 
 type Builtin struct {
-	Args []TypeFilter
+	Args    []TypeFilter
 	VarArgs bool
 
 	Ret Type
@@ -22,7 +25,7 @@ type Builtin struct {
 type Engine struct {
 	file string
 
-	stack    Stack[Unit]
+	stack        Stack[Unit]
 	stackHistory Stack[Stack[Unit]] // Stacks get saved here when calling functions so they don't intermingle
 
 	vars  map[string](Unit)
@@ -33,10 +36,10 @@ func New() Engine {
 	ret := Engine{
 		file: "#ENGINE",
 
-		stack: NewStack[Unit](),
+		stack:        NewStack[Unit](),
 		stackHistory: NewStack[Stack[Unit]](),
 
-		vars: make(map[string]Unit),
+		vars:  make(map[string]Unit),
 		funcs: make(map[string]Builtin),
 	}
 
@@ -45,34 +48,47 @@ func New() Engine {
 	return ret
 }
 
-// func (self *Engine) ExecuteFile(file string) {
-//     self.ExecuteStr(os.read)
-// }
+func formatStackTrace(strace error) error {
+	calls := strings.Split(strace.Error(), "|")
+	var out string
+
+	for i := range calls {
+		if i == len(calls)-1 {
+			break
+		}
+
+		out = fmt.Sprintf("%s%s%s\n", out, strings.Repeat(". ", i+1), calls[i])
+	}
+
+	out = fmt.Sprintf("%s%s%s", out, strings.Repeat(". ", len(calls)), aurora.Red(calls[len(calls)-1]))
+
+	return errors.New(out)
+}
 
 func (self *Engine) ExecuteStr(code string) error {
-    if self.file == "#ENGINE" { // If this wasn't called by ExecuteFile
-        self.file = "<anonymous>"
-    }
+	if self.file == "#ENGINE" { // If this wasn't called by ExecuteFile
+		self.file = "<anonymous>"
+	}
 
-    schemes, err := parser.Lex(self.file, code)
+	schemes, err := parser.Lex(self.file, code)
 
 	if err != nil {
 		return err
 	}
 
 	if log.GetLevel() == log.DebugLevel {
-		for _,scheme := range schemes {
-			DebugUnit(scheme);
+		for _, scheme := range schemes {
+			DebugUnit(scheme)
 		}
 	}
-	
-	for _,scheme := range schemes {
+
+	for _, scheme := range schemes {
 		if err := self.checkScheme(scheme.Value.(Scheme)); err != nil {
-			return fmt.Errorf("(%s) %v", scheme.Value.(Scheme).Name, err)
+			return formatStackTrace(err)
 		}
-		
+
 		if err := self.runScheme(scheme.Value.(Scheme)); err != nil {
-			return fmt.Errorf("[%s] %v", scheme.Value.(Scheme).Name, err)
+			return formatStackTrace(err)
 		}
 	}
 	return nil
@@ -80,7 +96,7 @@ func (self *Engine) ExecuteStr(code string) error {
 
 func (self *Engine) checkScheme(scheme Scheme) error {
 	var actualFn Builtin
-	if fn,ok := self.funcs[scheme.Name]; !ok {
+	if fn, ok := self.funcs[scheme.Name]; !ok {
 		return fmt.Errorf("Undefined function '%s'", scheme.Name)
 	} else {
 		actualFn = fn
@@ -93,8 +109,8 @@ func (self *Engine) checkScheme(scheme Scheme) error {
 	for idx := range actualFn.Args {
 		inType := scheme.Args[idx].Type
 
-		if scheme.Args[idx].Type == SchemeType { 
-			asScheme := scheme.Args[idx].Value.(Scheme);
+		if scheme.Args[idx].Type == SchemeType {
+			asScheme := scheme.Args[idx].Value.(Scheme)
 			if e := self.checkScheme(asScheme); e != nil {
 				return e
 			}
@@ -112,32 +128,27 @@ func (self *Engine) checkScheme(scheme Scheme) error {
 			)
 		}
 	}
-	
+
 	return nil
 }
 
 func (self *Engine) runScheme(scheme Scheme) error {
 	self.saveStack()
 
-	for _,arg := range scheme.Args {
+	for _, arg := range scheme.Args {
 		if arg.Type == SchemeType {
 			if err := self.runScheme(arg.Value.(Scheme)); err != nil {
-				return fmt.Errorf("%s %s\n%v", scheme.Position.ToString(), scheme.Name, err)
+				return fmt.Errorf("%s %s|%v", scheme.Position.ToString(), scheme.Name, err)
 			}
 		} else {
 			self.stack.Push(arg)
 		}
 	}
 
-	if fn,ok := self.funcs[scheme.Name]; !ok {
-		// Don't need to load stack because this is fatal (Stack wont be used again)
-		return fmt.Errorf("Undefined function '%s'", scheme.Name)
-	} else {
-		ret := fn.Call(self)
-		self.loadStack()
-		
-		return ret
-	}
+	fn := self.funcs[scheme.Name] // Function must exist (Already checked with checkScheme)
+	ret := fn.Call(self)
+	self.loadStack()
+	return ret
 }
 
 func (self *Engine) AddFunc(name string, args []TypeFilter, isVarArg bool, call BuiltinExec) error {
@@ -147,16 +158,16 @@ func (self *Engine) AddFunc(name string, args []TypeFilter, isVarArg bool, call 
 		}
 	}
 
-    self.funcs[name] = Builtin{
-		Args: args,
+	self.funcs[name] = Builtin{
+		Args:    args,
 		VarArgs: isVarArg,
-		Call: call,
-	};
+		Call:    call,
+	}
 
-    return nil;
+	return nil
 }
 
-func (self *Engine) Pop() (Unit,error) {
+func (self *Engine) Pop() (Unit, error) {
 	return self.stack.Pop()
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	log "github.com/charmbracelet/log"
@@ -9,12 +10,14 @@ import (
 	"github.com/leandrolopesm/scheme-go/engine"
 	"github.com/leandrolopesm/scheme-go/util"
 
+	aurora "github.com/logrusorgru/aurora/v4"
+
 	"github.com/nyaosorg/go-readline-ny"
 )
 
-const VERSION = "0.7.0";
-const WIP_TASK = "Stack isolation";
-const WIP_PROB = "max expects all arguments to be the [...]";
+const VERSION = "0.7.0"
+const WIP_TASK = "Stack isolation"
+const WIP_PROB = "max expects all arguments to be the [...]"
 
 func main() {
 	opt := util.Args()
@@ -26,7 +29,7 @@ func main() {
 		var editor readline.Editor
 
 		for {
-			if text,err := editor.ReadLine(context.Background()); err != nil {
+			if text, err := editor.ReadLine(context.Background()); err != nil {
 				if err.Error() == "EOF" {
 					break
 				}
@@ -43,9 +46,9 @@ func main() {
 			}
 		}
 	} else {
-		for _,file := range opt.Files {
+		for _, file := range opt.Files {
 			if err := lispEngine.ExecuteStr(string(util.Assert(os.ReadFile(file)))); err != nil {
-				log.Errorf("Execution failed: %s", err)
+				fmt.Print(aurora.Red("Execution failed:"), "\n", err)
 			}
 		}
 	}
