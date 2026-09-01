@@ -12,12 +12,13 @@ import (
 	"github.com/nyaosorg/go-readline-ny"
 )
 
-const VERSION = "0.6.0";
+const VERSION = "0.7.0";
+const WIP_TASK = "Stack isolation";
+const WIP_PROB = "max expects all arguments to be the [...]";
 
 func main() {
-	log.SetReportTimestamp(false)
 	opt := util.Args()
-	log.SetLevel(util.If(*opt.Verbose, log.DebugLevel, log.InfoLevel))
+	util.Logger(opt)
 
 	lispEngine := engine.New()
 
@@ -43,18 +44,9 @@ func main() {
 		}
 	} else {
 		for _,file := range opt.Files {
-			if err := lispEngine.ExecuteStr(string(must(os.ReadFile(file)))); err != nil {
+			if err := lispEngine.ExecuteStr(string(util.Assert(os.ReadFile(file)))); err != nil {
 				log.Errorf("Execution failed: %s", err)
 			}
 		}
 	}
-}
-
-func must[T any](a T, err error) T {
-	if err != nil {
-		log.Errorf("Infallible operation failed: %s", err)
-		os.Exit(1)
-	}
-
-	return a
 }

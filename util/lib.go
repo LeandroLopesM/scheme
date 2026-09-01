@@ -3,6 +3,8 @@ package util
 import (
 	"flag"
 	"os"
+
+	"github.com/charmbracelet/log"
 )
 
 func If[T any](cond bool, vtrue, vfalse T) T {
@@ -10,6 +12,11 @@ func If[T any](cond bool, vtrue, vfalse T) T {
         return vtrue
     }
     return vfalse
+}
+
+func Logger(opts Options) {
+	log.SetReportTimestamp(false)
+	log.SetLevel(If(*opts.Verbose, log.DebugLevel, log.InfoLevel))
 }
 
 type Options struct {
@@ -47,4 +54,13 @@ func Args() Options {
 	}
 
 	return opt
+}
+
+func Assert[T any](a T, err error) T {
+	if err != nil {
+		log.Errorf("Assert non-err failed: %s", err)
+		os.Exit(1)
+	}
+
+	return a
 }

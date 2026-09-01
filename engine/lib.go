@@ -22,20 +22,19 @@ type Builtin struct {
 type Engine struct {
 	file string
 
-	stack    []Unit
-	stackPtr int
+	stack    Stack[Unit]
+	stackHistory Stack[Stack[Unit]] // Stacks get saved here when calling functions so they don't intermingle
 
 	vars  map[string](Unit)
 	funcs map[string](Builtin)
-
 }
 
 func New() Engine {
 	ret := Engine{
 		file: "#ENGINE",
 
-		stack: make([]Unit, 128),
-        stackPtr: 0,
+		stack: NewStack[Unit](),
+		stackHistory: NewStack[Stack[Unit]](),
 
 		vars: make(map[string]Unit),
 		funcs: make(map[string]Builtin),
@@ -118,20 +117,26 @@ func (self *Engine) checkScheme(scheme Scheme) error {
 }
 
 func (self *Engine) runScheme(scheme Scheme) error {
+	self.saveStack()
+
 	for _,arg := range scheme.Args {
 		if arg.Type == SchemeType {
 			if err := self.runScheme(arg.Value.(Scheme)); err != nil {
 				return fmt.Errorf("%s %s\n%v", scheme.Position.ToString(), scheme.Name, err)
 			}
 		} else {
-			self.Push(arg)
+			self.stack.Push(arg)
 		}
 	}
 
 	if fn,ok := self.funcs[scheme.Name]; !ok {
+		// Don't need to load stack because this is fatal (Stack wont be used again)
 		return fmt.Errorf("Undefined function '%s'", scheme.Name)
 	} else {
-		return fn.Call(self)
+		ret := fn.Call(self)
+		self.loadStack()
+		
+		return ret
 	}
 }
 
@@ -149,4 +154,12 @@ func (self *Engine) AddFunc(name string, args []TypeFilter, isVarArg bool, call 
 	};
 
     return nil;
+}
+
+func (self *Engine) Pop() (Unit,error) {
+	return self.stack.Pop()
+}
+
+func (self *Engine) Push(v Unit) {
+	self.stack.Push(v)
 }
