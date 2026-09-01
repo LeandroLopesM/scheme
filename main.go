@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 
 	log "github.com/charmbracelet/log"
 	"github.com/leandrolopesm/scheme/core"
@@ -15,7 +14,7 @@ import (
 	"github.com/nyaosorg/go-readline-ny"
 )
 
-const VERSION = "0.8.0"
+const VERSION = "0.9.0"
 
 func main() {
 	opt := util.Args()
@@ -45,7 +44,7 @@ func main() {
 		}
 	} else {
 		for _, file := range opt.Files {
-			if err := lispEngine.ExecuteStr(string(util.Assert(os.ReadFile(file)))); err != nil {
+			if err := lispEngine.ExecuteFile(file); err != nil {
 				fmt.Print(aurora.Red("Execution failed:"), "\n", err)
 			}
 		}

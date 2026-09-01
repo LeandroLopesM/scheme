@@ -3,6 +3,7 @@ package engine
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/log"
@@ -65,6 +66,15 @@ func formatStackTrace(strace error) error {
 	return errors.New(out)
 }
 
+func (self *Engine) ExecuteFile(file string) error {
+	if v, e := os.ReadFile(file); e != nil {
+		return e
+	} else {
+		self.file = file
+		return self.ExecuteStr(string(v))
+	}
+}
+
 func (self *Engine) ExecuteStr(code string) error {
 	if self.file == "#ENGINE" { // If this wasn't called by ExecuteFile
 		self.file = "<anonymous>"
@@ -91,6 +101,7 @@ func (self *Engine) ExecuteStr(code string) error {
 			return formatStackTrace(err)
 		}
 	}
+		
 	return nil
 }
 
