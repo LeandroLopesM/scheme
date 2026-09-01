@@ -6,7 +6,7 @@ import (
 	"strings"
 	"unicode"
 
-	. "github.com/leandrolopesm/scheme-go/core"
+	. "github.com/leandrolopesm/scheme/core"
 )
 
 type Lexer struct {

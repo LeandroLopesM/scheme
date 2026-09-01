@@ -1,4 +1,4 @@
-module github.com/leandrolopesm/scheme-go
+module github.com/leandrolopesm/scheme
 
 go 1.27.0
 

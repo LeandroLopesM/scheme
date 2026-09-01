@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/log"
-	. "github.com/leandrolopesm/scheme-go/core"
-	"github.com/leandrolopesm/scheme-go/parser"
+	. "github.com/leandrolopesm/scheme/core"
+	"github.com/leandrolopesm/scheme/parser"
 	"github.com/logrusorgru/aurora/v4"
 )
 

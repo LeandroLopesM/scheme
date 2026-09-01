@@ -3,7 +3,7 @@ package engine
 import (
 	"errors"
 
-	"github.com/leandrolopesm/scheme-go/util"
+	"github.com/leandrolopesm/scheme/util"
 )
 
 const STACK_SIZE = 64

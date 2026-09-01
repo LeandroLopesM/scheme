@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 
-	. "github.com/leandrolopesm/scheme-go/core"
-	"github.com/leandrolopesm/scheme-go/util"
+	. "github.com/leandrolopesm/scheme/core"
+	"github.com/leandrolopesm/scheme/util"
 )
 
 func (self *Engine) RegisterBuiltins() {

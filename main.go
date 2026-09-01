@@ -6,16 +6,16 @@ import (
 	"os"
 
 	log "github.com/charmbracelet/log"
-	"github.com/leandrolopesm/scheme-go/core"
-	"github.com/leandrolopesm/scheme-go/engine"
-	"github.com/leandrolopesm/scheme-go/util"
+	"github.com/leandrolopesm/scheme/core"
+	"github.com/leandrolopesm/scheme/engine"
+	"github.com/leandrolopesm/scheme/util"
 
 	aurora "github.com/logrusorgru/aurora/v4"
 
 	"github.com/nyaosorg/go-readline-ny"
 )
 
-const VERSION = "0.7.1"
+const VERSION = "0.8.0"
 
 func main() {
 	opt := util.Args()
