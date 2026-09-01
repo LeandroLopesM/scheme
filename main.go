@@ -16,8 +16,6 @@ import (
 )
 
 const VERSION = "0.7.0"
-const WIP_TASK = "Stack isolation"
-const WIP_PROB = "max expects all arguments to be the [...]"
 
 func main() {
 	opt := util.Args()

@@ -26,7 +26,7 @@ type Engine struct {
 	file string
 
 	stack        Stack[Unit]
-	stackHistory Stack[Stack[Unit]] // Stacks get saved here when calling functions so they don't intermingle
+	stackHistory Stack[int] // Defines the lower bounds for the current stackPtr
 
 	vars  map[string](Unit)
 	funcs map[string](Builtin)
@@ -37,7 +37,7 @@ func New() Engine {
 		file: "#ENGINE",
 
 		stack:        NewStack[Unit](),
-		stackHistory: NewStack[Stack[Unit]](),
+		stackHistory: NewStack[int](),
 
 		vars:  make(map[string]Unit),
 		funcs: make(map[string]Builtin),
@@ -147,6 +147,7 @@ func (self *Engine) runScheme(scheme Scheme) error {
 
 	fn := self.funcs[scheme.Name] // Function must exist (Already checked with checkScheme)
 	ret := fn.Call(self)
+
 	self.loadStack()
 	return ret
 }

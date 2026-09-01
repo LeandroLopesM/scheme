@@ -21,10 +21,10 @@ func (self *Engine) RegisterBuiltins() {
 	self.AddFunc("-", []TypeFilter{NumberFt}, true, MathOp('-'))
 	self.AddFunc("*", []TypeFilter{NumberFt}, true, MathOp('*'))
 	self.AddFunc("/", []TypeFilter{NumberFt}, true, MathOp('/'))
-	
+
 	self.AddFunc("max", []TypeFilter{NumberFt}, true, OrdOp('>'))
 	self.AddFunc("min", []TypeFilter{NumberFt}, true, OrdOp('<'))
-	
+
 	self.AddFunc("expt", []TypeFilter{NumberFt}, true, expt)
 
 	self.AddFunc("eqv", []TypeFilter{Any, Any}, true, eqv)
@@ -35,7 +35,7 @@ func OrdOp(kind rune) BuiltinExec {
 		var nums []Unit
 		var overallType Type
 
-		val, err := e.Pop();
+		val, err := e.Pop()
 		for err == nil {
 			if len(nums) == 0 {
 				overallType = val.Type
@@ -43,8 +43,8 @@ func OrdOp(kind rune) BuiltinExec {
 				return fmt.Errorf(
 					"%s expects all arguments to be the same type (Was %s, now %s)",
 					util.If(kind == '>',
-						"max",
-						"min",
+						"(max)",
+						"(min)",
 					),
 					TypeNames[overallType],
 					TypeNames[val.Type],
@@ -52,26 +52,26 @@ func OrdOp(kind rune) BuiltinExec {
 			}
 
 			nums = append(nums, val)
-			val,err = e.Pop()
+			val, err = e.Pop()
 		}
 
 		switch overallType {
 		case Float:
 			var curr = numAsF(nums[0])
-			for _,v := range nums {
-				if util.If (kind == '>',
+			for _, v := range nums {
+				if util.If(kind == '>',
 					numAsF(v) > curr,
 					numAsF(v) < curr,
 				) {
 					curr = numAsF(v)
 				}
 			}
-			
+
 			e.Push(MkFloat(curr))
 		default:
 			var curr = nums[0].Value.(int64)
-			for _,v := range nums {
-				
+			for _, v := range nums {
+
 				if util.If(
 					kind == '>',
 					v.Value.(int64) > curr,
@@ -80,10 +80,9 @@ func OrdOp(kind rune) BuiltinExec {
 					curr = v.Value.(int64)
 				}
 			}
-			
+
 			e.Push(MkInt(curr))
 		}
-
 
 		return nil
 	}
@@ -99,8 +98,8 @@ func numAsF(num Unit) float64 {
 }
 
 func expt(e *Engine) error {
-	lhs, lErr := e.Pop();
-	rhs, rErr := e.Pop();
+	lhs, lErr := e.Pop()
+	rhs, rErr := e.Pop()
 
 	if lErr != nil {
 		return lErr
@@ -110,7 +109,7 @@ func expt(e *Engine) error {
 
 	var lFloat float64 = numAsF(lhs)
 	var rFloat float64 = numAsF(rhs)
-	
+
 	e.Push(MkFloat(math.Pow(lFloat, rFloat)))
 
 	return nil
@@ -119,35 +118,43 @@ func expt(e *Engine) error {
 // TODO: (- 4) => -4
 // TODO: (/ 4) => 1/4
 func MathOp(kind rune) BuiltinExec {
-	floatOp := func (a float64, b float64) float64 {
+	floatOp := func(a float64, b float64) float64 {
 		switch kind {
-			case '+': return a + b
-			case '-': return a - b
-			case '*': return a * b
-			case '/': return a / b
+		case '+':
+			return a + b
+		case '-':
+			return a - b
+		case '*':
+			return a * b
+		case '/':
+			return a / b
 		}
 
 		panic(fmt.Sprintf("Undefined operation %c", kind))
 	}
-	
-	intOp := func (a int64, b int64) int64 {
+
+	intOp := func(a int64, b int64) int64 {
 		log.Infof("A/B %v/%v", a, b)
 		switch kind {
-			case '+': return a + b
-			case '-': return a - b
-			case '*': return a * b
-			case '/': return a / b
+		case '+':
+			return a + b
+		case '-':
+			return a - b
+		case '*':
+			return a * b
+		case '/':
+			return a / b
 		}
 
 		panic(fmt.Sprintf("Undefined operation %c", kind))
 	}
 
-	return func (e *Engine) error {
+	return func(e *Engine) error {
 		filter := NumberFt
 		var numbers []Unit
 		var outType Type = Integer // We can be optimistic, right?
 
-		v, err := e.Pop();
+		v, err := e.Pop()
 
 		for err == nil {
 			if !filter.Matches(v.Type) {
@@ -159,21 +166,21 @@ func MathOp(kind rune) BuiltinExec {
 			}
 
 			numbers = append(numbers, v)
-			
+
 			v, err = e.Pop()
 		}
 
 		switch outType {
 		case Float:
 			var out float64 = numAsF(numbers[0])
-			for _,num := range numbers[1:] {
+			for _, num := range numbers[1:] {
 				out = floatOp(out, numAsF(num))
 			}
 
 			e.Push(MkFloat(out))
 		default:
 			var out int64 = numbers[0].Value.(int64)
-			for _,num := range numbers[1:] {
+			for _, num := range numbers[1:] {
 				out = intOp(out, num.Value.(int64))
 			}
 
