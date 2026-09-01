@@ -1,8 +1,16 @@
 package core
 
+import "fmt"
+
 type Scheme struct {
 	Name string
 	Args []Unit
+
+	Position Position
+}
+
+func (pos Position) ToString() string {
+	return fmt.Sprintf("%s:%d:%d", pos.File, pos.Line, pos.Char)
 }
 
 var TypeFilterNames = map[TypeFilter](string){
@@ -55,6 +63,11 @@ const (
 	Bool
 	String
 )
+
+type Position struct {
+	Line, Char int
+	File       string
+}
 
 type Unit struct {
 	Type Type

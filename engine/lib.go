@@ -27,6 +27,7 @@ type Engine struct {
 
 	vars  map[string](Unit)
 	funcs map[string](Builtin)
+
 }
 
 func New() Engine {
@@ -54,7 +55,7 @@ func (self *Engine) ExecuteStr(code string) error {
         self.file = "<anonymous>"
     }
 
-    schemes, err := parser.Lex(code)
+    schemes, err := parser.Lex(self.file, code)
 
 	if err != nil {
 		return err
@@ -68,11 +69,11 @@ func (self *Engine) ExecuteStr(code string) error {
 	
 	for _,scheme := range schemes {
 		if err := self.checkScheme(scheme.Value.(Scheme)); err != nil {
-			return err
+			return fmt.Errorf("(%s) %v", scheme.Value.(Scheme).Name, err)
 		}
-
+		
 		if err := self.runScheme(scheme.Value.(Scheme)); err != nil {
-			return err
+			return fmt.Errorf("[%s] %v", scheme.Value.(Scheme).Name, err)
 		}
 	}
 	return nil
@@ -120,7 +121,7 @@ func (self *Engine) runScheme(scheme Scheme) error {
 	for _,arg := range scheme.Args {
 		if arg.Type == SchemeType {
 			if err := self.runScheme(arg.Value.(Scheme)); err != nil {
-				return err
+				return fmt.Errorf("%s %s\n%v", scheme.Position.ToString(), scheme.Name, err)
 			}
 		} else {
 			self.Push(arg)

@@ -12,16 +12,18 @@ import (
 type Lexer struct {
 	iter Iterator[rune]
 	line int
+	file string
 }
 
 func (lex *Lexer) Error(msg string) error {
 	return fmt.Errorf("%v:%v: %v", lex.line, lex.iter.Tell(), msg)
 }
 
-func Lex(raw string) ([]Unit, error) {
+func Lex(fileName string, raw string) ([]Unit, error) {
 	lex := Lexer {
 		iter: NewIterator([]rune(raw)),
 		line: 1,
+		file: fileName,
 	}
 
 	var out []Unit
@@ -61,6 +63,13 @@ func Lex(raw string) ([]Unit, error) {
 
 func (lex *Lexer) parseGroup() (Scheme, error) {
 	var out Scheme;
+
+	out.Position = Position {
+		Line: lex.line,
+		Char: lex.iter.Tell(),
+
+		File: lex.file,
+	}
 
 	out.Name = lex.parseId().Value.(string)
 
@@ -158,8 +167,8 @@ func (lex *Lexer) parseId() Unit {
 
 	
 	return Unit{
+		Type: Ident,
 		Value: string(buffer),
-		Type: Integer,
 	}
 }
 
@@ -185,8 +194,8 @@ func (lex *Lexer) parseNum() (Unit, error) {
 			return Unit{}, lex.Error(fmt.Sprintf("Invalid floating point literal '%v'", asStr))
 		} else {
 			return Unit{
-				Value: val,
 				Type: Float,
+				Value: val,
 			}, nil
 		}
 	}
@@ -205,8 +214,8 @@ func (lex *Lexer) parseNum() (Unit, error) {
 		return Unit{}, lex.Error(fmt.Sprintf("Invalid integer literal '%v'", asStr))
 	} else {
 		return Unit{
-			Value: val,
 			Type: Integer,
+			Value: val,
 		}, nil
 	}
 }
@@ -231,7 +240,7 @@ func (lex *Lexer) parseStr() (Unit, error) {
 		return Unit{}, lex.Error(fmt.Sprintf("Unclosed string ..\"%s\"..", stringAround(5, lex.iter.elems, start)))
 	}
 
-	return Unit {
+	return Unit{
 		Type: String,
 		Value: string(out),
 	}, nil

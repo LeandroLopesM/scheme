@@ -1,63 +1,50 @@
 package util
 
 import (
-	"fmt"
+	"flag"
 	"os"
-	"runtime"
-	"strings"
-
-	"github.com/charmbracelet/log"
 )
 
-func Logger() {
-	logger := log.NewWithOptions(os.Stdout, log.Options{
-		ReportTimestamp: false,
-		ReportCaller:    false,
-	})
-
-	log.SetDefault(logger)
+func If[T any](cond bool, vtrue, vfalse T) T {
+    if cond {
+        return vtrue
+    }
+    return vfalse
 }
 
-func GenerateStacktrace(temp interface{}) string {
-	stack := make([]uintptr, 64)
-	currStack := runtime.Callers(2, stack)
-	// stack is inverse
-	stack = invertStack(stack)
+type Options struct {
+	Verbose *bool
+	Repl bool
+	Files []string
+}
 
-	// strs := strings.Split((runtime.FuncForPC(reflect.ValueOf(temp).Pointer()).Name()), ".")
-
-	var ret string
-	for _,stackPC := range stack[:currStack] {
-		fun := runtime.FuncForPC(stackPC)
-
-		name := strings.Split(fun.Name(), "/");
-		ret = fmt.Sprintf("%v > %v", ret, name[len(name) - 1])
+func Args() Options {
+	flag.CommandLine.Name()
+	opt := Options{
+		Verbose: flag.Bool("verbose", false, "Enable verbose logging"),
+		Repl: false,
+		Files: []string{},
 	}
 
-	return ret
-}
+	flag.BoolVar(&opt.Repl, "repl", false, "Run as in REPL mode")
 
-func invertStack(arr []uintptr) []uintptr {
-	out := make([]uintptr, len(arr))
+	help := flag.Bool("help", false, "Show help message")
 
-	for i := 0; i < len(arr); i++ {
-		if arr[i] != 0 {
-			out[len(arr) - i - 1] = arr[i]
+	flag.Parse()
+
+	if *help {
+		flag.Usage();
+		os.Exit(0)
+	}
+
+	if flag.NArg() == 0 {
+		if !opt.Repl {
+			print("No files provided, running in REPL")
 		}
+		opt.Repl = true
+	} else {
+		opt.Files = flag.Args()
 	}
 
-	var cutOff = 0;
-	for i,e := range out {
-		if e != 0 {
-			cutOff = i
-			break
-		}
-	}
-
-	out = out[cutOff:]
-
-	log.Infof("In %v\nOut %v", arr, out)
-
-	return out
+	return opt
 }
-

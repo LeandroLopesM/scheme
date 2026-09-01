@@ -1,27 +1,52 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	log "github.com/charmbracelet/log"
+	"github.com/leandrolopesm/scheme-go/core"
 	"github.com/leandrolopesm/scheme-go/engine"
 	"github.com/leandrolopesm/scheme-go/util"
+
+	"github.com/nyaosorg/go-readline-ny"
 )
 
-const VERSION = "0.5.0";
+const VERSION = "0.6.0";
 
 func main() {
-	util.Logger()
-	
-	if len(os.Args) < 2 {
-		log.Error("USAGE: scheme-go <file.lsp>")
-		return
-	}
+	log.SetReportTimestamp(false)
+	opt := util.Args()
+	log.SetLevel(util.If(*opt.Verbose, log.DebugLevel, log.InfoLevel))
 
-	file := os.Args[1]
 	lispEngine := engine.New()
-	if err := lispEngine.ExecuteStr(string(must(os.ReadFile(file)))); err != nil {
-		log.Errorf("Execution failed: %s", err)
+
+	if opt.Repl {
+		var editor readline.Editor
+
+		for {
+			if text,err := editor.ReadLine(context.Background()); err != nil {
+				if err.Error() == "EOF" {
+					break
+				}
+
+				log.Errorf("Failed to read input: %s", err)
+			} else {
+				if err := lispEngine.ExecuteStr(text); err != nil {
+					log.Errorf("Execution failed: %s", err)
+				}
+
+				if v, e := lispEngine.Pop(); e == nil { // If the last call pushed a value, print it
+					core.PrintUnit(v)
+				}
+			}
+		}
+	} else {
+		for _,file := range opt.Files {
+			if err := lispEngine.ExecuteStr(string(must(os.ReadFile(file)))); err != nil {
+				log.Errorf("Execution failed: %s", err)
+			}
+		}
 	}
 }
 

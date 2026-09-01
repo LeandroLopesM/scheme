@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	. "github.com/leandrolopesm/scheme-go/core"
+	"github.com/leandrolopesm/scheme-go/util"
 )
 
 func (self *Engine) RegisterBuiltins() {
@@ -16,14 +17,76 @@ func (self *Engine) RegisterBuiltins() {
 	self.AddFunc("integer?", []TypeFilter{Any}, false, isX(Integer))
 	self.AddFunc("rational?", []TypeFilter{Any}, false, isX(Float))
 
-	self.AddFunc("+", []TypeFilter{NumberFt}, true, VarOp('+'))
-	self.AddFunc("-", []TypeFilter{NumberFt}, true, VarOp('-'))
-	self.AddFunc("*", []TypeFilter{NumberFt}, true, VarOp('*'))
-	self.AddFunc("/", []TypeFilter{NumberFt}, true, VarOp('/'))
+	self.AddFunc("+", []TypeFilter{NumberFt}, true, MathOp('+'))
+	self.AddFunc("-", []TypeFilter{NumberFt}, true, MathOp('-'))
+	self.AddFunc("*", []TypeFilter{NumberFt}, true, MathOp('*'))
+	self.AddFunc("/", []TypeFilter{NumberFt}, true, MathOp('/'))
+	
+	self.AddFunc("max", []TypeFilter{NumberFt}, true, OrdOp('>'))
+	self.AddFunc("min", []TypeFilter{NumberFt}, true, OrdOp('<'))
 	
 	self.AddFunc("expt", []TypeFilter{NumberFt}, true, expt)
 
 	self.AddFunc("eqv", []TypeFilter{Any, Any}, true, eqv)
+}
+
+func OrdOp(kind rune) BuiltinExec {
+	return func(e *Engine) error {
+		var nums []Unit
+		var overallType Type
+
+		val, err := e.Pop();
+		for err == nil {
+			if len(nums) == 0 {
+				overallType = val.Type
+			} else if val.Type != overallType {
+				return fmt.Errorf(
+					"%s expects all arguments to be the same type (Was %s, now %s)",
+					util.If(kind == '>',
+						"max",
+						"min",
+					),
+					TypeNames[overallType],
+					TypeNames[val.Type],
+				)
+			}
+
+			nums = append(nums, val)
+			val,err = e.Pop()
+		}
+
+		switch overallType {
+		case Float:
+			var curr = numAsF(nums[0])
+			for _,v := range nums {
+				if util.If (kind == '>',
+					numAsF(v) > curr,
+					numAsF(v) < curr,
+				) {
+					curr = numAsF(v)
+				}
+			}
+			
+			e.Push(MkFloat(curr))
+		default:
+			var curr = nums[0].Value.(int64)
+			for _,v := range nums {
+				
+				if util.If(
+					kind == '>',
+					v.Value.(int64) > curr,
+					v.Value.(int64) < curr,
+				) {
+					curr = v.Value.(int64)
+				}
+			}
+			
+			e.Push(MkInt(curr))
+		}
+
+
+		return nil
+	}
 }
 
 func numAsF(num Unit) float64 {
@@ -53,7 +116,9 @@ func expt(e *Engine) error {
 	return nil
 }
 
-func VarOp(kind rune) BuiltinExec {
+// TODO: (- 4) => -4
+// TODO: (/ 4) => 1/4
+func MathOp(kind rune) BuiltinExec {
 	floatOp := func (a float64, b float64) float64 {
 		switch kind {
 			case '+': return a + b
