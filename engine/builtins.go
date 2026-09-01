@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/charmbracelet/log"
 	. "github.com/leandrolopesm/scheme-go/core"
 	"github.com/leandrolopesm/scheme-go/util"
 )
@@ -134,7 +133,6 @@ func MathOp(kind rune) BuiltinExec {
 	}
 
 	intOp := func(a int64, b int64) int64 {
-		log.Infof("A/B %v/%v", a, b)
 		switch kind {
 		case '+':
 			return a + b
