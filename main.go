@@ -14,13 +14,7 @@ import (
 	"github.com/nyaosorg/go-readline-ny"
 )
 
-const VERSION = "0.11.0-wip-0"
-const WIP_TASK = "Implement symbols and (quote Symbols)"
-const WIP_PROB = `
-runScheme should replace symbols when building the stack.
-This is problematic for quoted symbols.
-> How do you setup (quote)'s stack without failing to fetch the variable
-(Maybe make it a special case? (Rather not))`
+const VERSION = "0.11.0"
 
 func main() {
 	opt := util.Args()

@@ -29,12 +29,14 @@ func (self *Engine) RegisterBuiltins() {
 	self.AddFunc("expt", []TypeFilter{NumberFt}, true, expt)
 
 	self.AddFunc("eqv", []TypeFilter{Any, Any}, true, eqv)
-	
+
+	// self.AddFunc("quote", []TypeFilter{SymbolFt}, false, quote)
+
 	self.AddFunc("define", []TypeFilter{SymbolFt, Any}, false, define)
 }
 
-func define(e* Engine) error {
-	if value,err := e.Pop(); err != nil{
+func define(e *Engine) error {
+	if value, err := e.Pop(); err != nil {
 		return errors.New("Expected variable value")
 	} else {
 		if name, err := e.Pop(); err != nil {
