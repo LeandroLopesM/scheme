@@ -12,19 +12,24 @@ func DebugUnit(gUnit Unit) {
 }
 
 func PrintUnit(unit Unit) {
+	fmt.Println(SprintUnit(unit))
+}
+func SprintUnit(unit Unit) string {
 	switch unit.Type {
 	case SchemeType:
-		fmt.Printf("Scheme<%s>", unit.Value.(Scheme).Name)
+		return fmt.Sprintf("Scheme<%s>", unit.Value.(Scheme).Name)
+	case Symbol:
+		return fmt.Sprintf("%s", unit.Value.(string))
 	case Float:
-		fmt.Printf("%f", unit.Value.(float64))
+		return fmt.Sprintf("%f", unit.Value.(float64))
 	case Integer:
-		fmt.Printf("%d", unit.Value.(int64))
+		return fmt.Sprintf("%d", unit.Value.(int64))
 	case String:
-		fmt.Printf("%s", unit.Value.(string))
+		return fmt.Sprintf("%s", unit.Value.(string))
 	case Bool:
-		fmt.Printf("%v", unit.Value.(bool))
+		return fmt.Sprintf("%v", unit.Value.(bool))
 	case Char:
-		fmt.Printf("%c", unit.Value.(rune))
+		return fmt.Sprintf("%c", unit.Value.(rune))
 	default:
 		panic(fmt.Sprintf("Unknown type %v", unit))
 	}
@@ -38,12 +43,14 @@ func debugUnit(unit Unit, depth int) {
 		for _, member := range asGroup.Args {
 			debugUnit(member, depth+1)
 		}
+	case Symbol:
+		log.Debugf("%sSymbol %s", repeat(depth), unit.Value.(string))
 	case Float:
 		log.Debugf("%sFloat %.1f", repeat(depth), unit.Value.(float64))
 	case Integer:
 		log.Debugf("%sInt %v", repeat(depth), unit.Value.(int64))
 	case String:
-		log.Debugf("%sString %s", repeat(depth), unit.Value.(string))
+		log.Debugf("%sString \"%s\"", repeat(depth), unit.Value.(string))
 	case Char:
 		log.Debugf("%sChar %c", repeat(depth), unit.Value.(rune))
 	default:

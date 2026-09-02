@@ -1,6 +1,8 @@
 package core
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Scheme struct {
 	Name string
@@ -14,7 +16,7 @@ func (pos Position) ToString() string {
 }
 
 var TypeFilterNames = map[TypeFilter](string){
-	IdentFt:   "Identifier",
+	SymbolFt:   "Symbolifier",
 	IntegerFt: "Integer",
 	FloatFt:   "Float",
 	BoolFt:    "Bool",
@@ -23,7 +25,7 @@ var TypeFilterNames = map[TypeFilter](string){
 }
 
 var TypeNames = map[Type](string){
-	Ident:   "Identifier",
+	Symbol:   "Symbolifier",
 	Integer: "Integer",
 	Float:   "Float",
 	Bool:    "Bool",
@@ -35,7 +37,8 @@ type TypeFilter int
 
 const (
 	NumberFt TypeFilter = iota
-	IdentFt
+
+	SymbolFt
 	IntegerFt
 	FloatFt
 	BoolFt
@@ -50,7 +53,7 @@ func (tf TypeFilter) Matches(ty Type) bool {
 	case NumberFt:
 		return ty == Integer || ty == Float
 	default:
-		return ty == Type(tf-1)
+		return ty == Type(tf)
 	}
 }
 
@@ -58,7 +61,7 @@ type Type int
 
 const (
 	SchemeType Type = iota
-	Ident
+	Symbol
 	Integer
 	Float
 	Bool

@@ -120,7 +120,7 @@ func (lex *Lexer) parseGroup() (Scheme, error) {
 		case *val == '#':
 			out.Args = append(out.Args, lex.parseTag())
 
-		case isIdentVal(*val):
+		case isSymbolVal(*val):
 			out.Args = append(out.Args, lex.parseId())
 		
 		default:
@@ -185,7 +185,7 @@ func (lex *Lexer) parseId() Unit {
 
 	v, e := lex.iter.Curr()
 	for e == nil {
-		if !isIdentVal(*v) {
+		if !isSymbolVal(*v) {
 			_,_ = lex.iter.Prev();
 			break
 		}
@@ -197,7 +197,7 @@ func (lex *Lexer) parseId() Unit {
 
 	
 	return Unit{
-		Type: Ident,
+		Type: Symbol,
 		Value: string(buffer),
 	}
 }
@@ -304,6 +304,6 @@ func isPrefix(c rune) bool {
 	return c == 'b' || c == 'x'
 }
 
-func isIdentVal(c rune) bool {
+func isSymbolVal(c rune) bool {
 	return !(c == '(' || c == ')' || isWhitespace(c))
 }

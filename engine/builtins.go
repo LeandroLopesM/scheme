@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
@@ -12,6 +13,7 @@ func (self *Engine) RegisterBuiltins() {
 	self.AddFunc("display", []TypeFilter{Any}, false, display)
 	self.AddFunc("newline", []TypeFilter{}, false, newline)
 
+	self.AddFunc("symbol?", []TypeFilter{Any}, false, isX(Symbol))
 	self.AddFunc("boolean?", []TypeFilter{Any}, false, isX(Bool))
 	self.AddFunc("integer?", []TypeFilter{Any}, false, isX(Integer))
 	self.AddFunc("rational?", []TypeFilter{Any}, false, isX(Float))
@@ -27,6 +29,22 @@ func (self *Engine) RegisterBuiltins() {
 	self.AddFunc("expt", []TypeFilter{NumberFt}, true, expt)
 
 	self.AddFunc("eqv", []TypeFilter{Any, Any}, true, eqv)
+	
+	self.AddFunc("define", []TypeFilter{SymbolFt, Any}, false, define)
+}
+
+func define(e* Engine) error {
+	if value,err := e.Pop(); err != nil{
+		return errors.New("Expected variable value")
+	} else {
+		if name, err := e.Pop(); err != nil {
+			return errors.New("Expectede variable name")
+		} else {
+			e.vars[name.Value.(string)] = value
+		}
+	}
+
+	return nil
 }
 
 func OrdOp(kind rune) BuiltinExec {

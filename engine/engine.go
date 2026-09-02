@@ -92,11 +92,30 @@ func (self *Engine) ExecuteStr(code string) error {
 		}
 
 		if err := self.runScheme(scheme.Value.(Scheme)); err != nil {
+			if log.GetLevel() == log.DebugLevel {
+				self.printStack()
+			}
+
 			return formatStackTrace(err)
 		}
 	}
 
 	return nil
+}
+
+func (self *Engine) printStack() {
+	log.Debug("Current stack:")
+	for _,u := range self.stack.raw {
+		log.Debug("%s", SprintUnit(u))
+	}
+}
+
+func (self *Engine) GetVar(name string) (Unit, error) {
+	if v,ok := self.vars[name]; !ok {
+		return Unit{}, fmt.Errorf("Undefined variable '%s'", name)
+	} else {
+		return v, nil
+	}
 }
 
 func (self *Engine) checkScheme(scheme Scheme) error {
@@ -122,6 +141,12 @@ func (self *Engine) checkScheme(scheme Scheme) error {
 
 			// If the function exists, use it's return value as the type
 			inType = self.funcs[asScheme.Name].Ret
+		} else if scheme.Args[idx].Type == Symbol && actualFn.Args[idx].Matches(Symbol) {
+			if v,e := self.GetVar(scheme.Args[idx].Value.(string)); e != nil {
+				return e
+			} else {
+				inType = v.Type
+			}
 		}
 
 		if !actualFn.Args[idx].Matches(inType) {
@@ -141,12 +166,15 @@ func (self *Engine) runScheme(scheme Scheme) error {
 	self.saveStack()
 
 	for _, arg := range scheme.Args {
-		if arg.Type == SchemeType {
+		switch arg.Type {
+		case SchemeType:
 			if err := self.runScheme(arg.Value.(Scheme)); err != nil {
 				return fmt.Errorf("%s %s|%v", scheme.Position.ToString(), scheme.Name, err)
 			}
-		} else {
-			self.stack.Push(arg)
+		case Symbol:
+			return fmt.Errorf
+		default:
+			self.Push(arg)
 		}
 	}
 
