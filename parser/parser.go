@@ -6,6 +6,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/charmbracelet/log"
 	. "github.com/leandrolopesm/scheme/core"
 )
 
@@ -117,7 +118,7 @@ func (lex *Lexer) parseGroup() (Scheme, error) {
 			}
 
 		case *val == '#':
-			out.Args = append(out.Args, lex.parseBool())
+			out.Args = append(out.Args, lex.parseTag())
 
 		case isIdentVal(*val):
 			out.Args = append(out.Args, lex.parseId())
@@ -134,19 +135,48 @@ func (lex *Lexer) parseGroup() (Scheme, error) {
 	return Scheme{}, lex.Error(fmt.Sprintf("Scheme '%s': Expected ')'", out.Name))
 }
 
-func (lex *Lexer) parseBool() Unit {
-	next := lex.iter.PeekOr(' ');
+func (lex *Lexer) parseChar() Unit {
+	tagVal := lex.parseId().Value.(string)
 
-	if next != 't' && next != 'f' {
-		return lex.parseId() // It wasn't a bool
+	var actualChar rune
+	switch tagVal[2:] { // Skip #/
+	case "newline": actualChar = '\n'
+	case "space": actualChar = ' '
+	default: {
+		if len(tagVal) > 1 {
+			log.Warnf("Unimplemented character literal %s, defaulting to the %c", tagVal, []rune(tagVal)[0])
+		}
+		
+		actualChar = []rune(tagVal)[0]
+	}
 	}
 
-	lex.iter.Consume() // Eat the postfix
+	return Unit {
+		Type: Char,
+		Value: actualChar,
+	}
+}
 
-	val := next == 't' 
+func (lex *Lexer) parseBool() Unit {
+	postfix,_ := lex.iter.Curr() // Eat the postfix
+
+	val := *postfix == 't' 
 	return Unit{
 		Type: Bool,
 		Value: val,
+	}
+}
+
+func (lex *Lexer) parseTag() Unit {
+	next := lex.iter.PeekOr(' ');
+
+	switch next {
+	case '\\':
+		return lex.parseChar()
+	case 't', 'f', 'T', 'F':
+		return lex.parseBool()
+	default:
+		return lex.parseId()
 	}
 }
 

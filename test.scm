@@ -1,2 +1,4 @@
-(display (max 15.0 (max 1 5 3 4)))
+(display "Hello,"")
+(display #\space)
+(display "World!"")
 (newline)

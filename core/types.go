@@ -28,6 +28,7 @@ var TypeNames = map[Type](string){
 	Float:   "Float",
 	Bool:    "Bool",
 	String:  "String",
+	Char:  "Char",
 }
 
 type TypeFilter int
@@ -62,6 +63,7 @@ const (
 	Float
 	Bool
 	String
+	Char
 )
 
 type Position struct {
@@ -96,6 +98,12 @@ func MkBool(v bool) Unit {
 func MkString(v string) Unit {
 	return Unit{
 		Type:  String,
+		Value: v,
+	}
+}
+func MkChar(v rune) Unit {
+	return Unit{
+		Type:  Char,
 		Value: v,
 	}
 }

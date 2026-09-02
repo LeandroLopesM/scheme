@@ -23,8 +23,10 @@ func PrintUnit(unit Unit) {
 		fmt.Printf("%s", unit.Value.(string))
 	case Bool:
 		fmt.Printf("%v", unit.Value.(bool))
+	case Char:
+		fmt.Printf("%c", unit.Value.(rune))
 	default:
-		panic(fmt.Sprintf("Unreachable type %v", unit))
+		panic(fmt.Sprintf("Unknown type %v", unit))
 	}
 }
 
@@ -42,6 +44,8 @@ func debugUnit(unit Unit, depth int) {
 		log.Debugf("%sInt %v", repeat(depth), unit.Value.(int64))
 	case String:
 		log.Debugf("%sString %s", repeat(depth), unit.Value.(string))
+	case Char:
+		log.Debugf("%sChar %c", repeat(depth), unit.Value.(rune))
 	default:
 		log.Warnf("%sUnknown %v", repeat(depth), unit.Value)
 	}
