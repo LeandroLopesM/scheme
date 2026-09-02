@@ -54,14 +54,8 @@ func formatStackTrace(strace error) error {
 	var out string
 
 	for i := range calls {
-		if i == len(calls)-1 {
-			break
-		}
-
 		out = fmt.Sprintf("%s%s%s\n", out, strings.Repeat(". ", i+1), calls[i])
 	}
-
-	out = fmt.Sprintf("%s%s%s", out, strings.Repeat(". ", len(calls)), aurora.Red(calls[len(calls)-1]))
 
 	return errors.New(out)
 }
@@ -101,7 +95,7 @@ func (self *Engine) ExecuteStr(code string) error {
 			return formatStackTrace(err)
 		}
 	}
-		
+
 	return nil
 }
 
@@ -160,7 +154,11 @@ func (self *Engine) runScheme(scheme Scheme) error {
 	ret := fn.Call(self)
 
 	self.loadStack()
-	return ret
+	if ret != nil {
+		return fmt.Errorf("%s %s: %s", scheme.Position.ToString(), scheme.Name, aurora.Red(ret))
+	}
+
+	return nil
 }
 
 func (self *Engine) AddFunc(name string, args []TypeFilter, isVarArg bool, call BuiltinExec) error {
