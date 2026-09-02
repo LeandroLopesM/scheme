@@ -38,7 +38,7 @@ func define(e* Engine) error {
 		return errors.New("Expected variable value")
 	} else {
 		if name, err := e.Pop(); err != nil {
-			return errors.New("Expectede variable name")
+			return errors.New("Expected variable name")
 		} else {
 			e.vars[name.Value.(string)] = value
 		}

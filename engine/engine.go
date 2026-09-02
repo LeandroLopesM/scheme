@@ -92,10 +92,6 @@ func (self *Engine) ExecuteStr(code string) error {
 		}
 
 		if err := self.runScheme(scheme.Value.(Scheme)); err != nil {
-			if log.GetLevel() == log.DebugLevel {
-				self.printStack()
-			}
-
 			return formatStackTrace(err)
 		}
 	}
@@ -105,7 +101,7 @@ func (self *Engine) ExecuteStr(code string) error {
 
 func (self *Engine) printStack() {
 	log.Debug("Current stack:")
-	for _,u := range self.stack.raw {
+	for _,u := range self.stack.raw[0:self.stack.ptr] {
 		log.Debug("%s", SprintUnit(u))
 	}
 }
@@ -141,7 +137,9 @@ func (self *Engine) checkScheme(scheme Scheme) error {
 
 			// If the function exists, use it's return value as the type
 			inType = self.funcs[asScheme.Name].Ret
-		} else if scheme.Args[idx].Type == Symbol && actualFn.Args[idx].Matches(Symbol) {
+		
+		// If the passed argument is a symbol and we dont want a symbol, get its actual type
+		} else if scheme.Args[idx].Type == Symbol && !actualFn.Args[idx].Matches(Symbol) {
 			if v,e := self.GetVar(scheme.Args[idx].Value.(string)); e != nil {
 				return e
 			} else {
@@ -163,22 +161,27 @@ func (self *Engine) checkScheme(scheme Scheme) error {
 }
 
 func (self *Engine) runScheme(scheme Scheme) error {
+	fn := self.funcs[scheme.Name] // Function must exist (Already checked with checkScheme)
 	self.saveStack()
 
-	for _, arg := range scheme.Args {
+	for i, arg := range scheme.Args {
 		switch arg.Type {
 		case SchemeType:
 			if err := self.runScheme(arg.Value.(Scheme)); err != nil {
 				return fmt.Errorf("%s %s|%v", scheme.Position.ToString(), scheme.Name, err)
 			}
 		case Symbol:
-			return fmt.Errorf
+			if !fn.Args[i].Matches(Symbol) || fn.Args[i] == Any { // Any is shorthand for anything OTHER THAN Symbol
+				v,_ := self.GetVar(arg.Value.(string))
+				self.Push(v)
+			} else {
+				self.Push(arg)
+			}
 		default:
 			self.Push(arg)
 		}
 	}
 
-	fn := self.funcs[scheme.Name] // Function must exist (Already checked with checkScheme)
 	ret := fn.Call(self)
 
 	self.loadStack()
