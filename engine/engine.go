@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/log"
 	. "github.com/leandrolopesm/scheme/core"
 	"github.com/leandrolopesm/scheme/parser"
+	"github.com/leandrolopesm/scheme/util"
 	"github.com/logrusorgru/aurora/v4"
 )
 
@@ -119,7 +120,8 @@ func (self *Engine) checkScheme(scheme Scheme) error {
 		return fmt.Errorf("Scheme '%s': Expected %d args, got %d", scheme.Name, len(actualFn.Args), len(scheme.Args))
 	}
 
-	for idx := range actualFn.Args {
+	idx := 0
+	for range actualFn.Args {
 		inType := scheme.Args[idx].Type
 
 		if scheme.Args[idx].Type == SchemeType {
@@ -148,6 +150,10 @@ func (self *Engine) checkScheme(scheme Scheme) error {
 				TypeNames[inType],
 			)
 		}
+
+		if !actualFn.VarArgs { // We only match against the first arg, repeating
+			idx++
+		}
 	}
 
 	return nil
@@ -164,7 +170,9 @@ func (self *Engine) runScheme(scheme Scheme) error {
 				return fmt.Errorf("%s %s|%v", scheme.Position.ToString(), scheme.Name, err)
 			}
 		case Symbol:
-			if !fn.Args[i].Matches(Symbol) || fn.Args[i] == Any { // Any is shorthand for anything OTHER THAN Symbol
+			fnArgIdx := util.If(fn.VarArgs, 0, i)
+			
+			if !fn.Args[fnArgIdx].Matches(Symbol) || fn.Args[fnArgIdx] == Any { // Any is shorthand for anything OTHER THAN Symbol
 				v,_ := self.GetVar(arg.Value.(string))
 				self.Push(v)
 			} else {

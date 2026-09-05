@@ -10,7 +10,7 @@ import (
 )
 
 func (self *Engine) RegisterBuiltins() {
-	self.AddFunc("display", []TypeFilter{Any}, false, display)
+	self.AddFunc("display", []TypeFilter{Any}, true, display)
 	self.AddFunc("newline", []TypeFilter{}, false, newline)
 
 	self.AddFunc("symbol?", []TypeFilter{Any}, false, isX(Symbol))
@@ -28,7 +28,7 @@ func (self *Engine) RegisterBuiltins() {
 
 	self.AddFunc("expt", []TypeFilter{NumberFt}, true, expt)
 
-	self.AddFunc("eqv", []TypeFilter{Any, Any}, true, eqv)
+	self.AddFunc("eqv", []TypeFilter{Any}, true, eqv)
 
 	// self.AddFunc("quote", []TypeFilter{SymbolFt}, false, quote)
 
@@ -240,10 +240,22 @@ func eqv(e *Engine) error {
 }
 
 func display(e *Engine) error {
-	if val, err := e.Pop(); err != nil {
-		return err
-	} else {
-		print(SprintUnit(val))
+	var args []Unit
+
+	for {
+		if val, err := e.Pop(); err != nil {
+			break
+		} else {
+			args = append(args, val)
+		}
+	}
+
+	idx := len(args) - 1;
+
+	for idx >= 0 {
+		print(SprintUnit(args[idx]))
+
+		idx--
 	}
 
 	return nil

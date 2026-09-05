@@ -14,7 +14,7 @@ import (
 	"github.com/nyaosorg/go-readline-ny"
 )
 
-const VERSION = "0.11.4"
+const VERSION = "0.12.0"
 
 func main() {
 	opt := util.Args()
