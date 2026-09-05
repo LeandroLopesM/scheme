@@ -249,7 +249,7 @@ func display(e *Engine) error {
 	if val, err := e.Pop(); err != nil {
 		return err
 	} else {
-		PrintUnit(val)
+		print(SprintUnit(val))
 	}
 
 	return nil
