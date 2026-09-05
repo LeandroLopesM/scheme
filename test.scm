@@ -1,7 +1,7 @@
-(define foo 9)
-(define bar (string #\H #\e #\l #\l #\o))
+(define bar "Why though?"")
 
-(display "Foo is "" foo)
+(display bar)
 (newline)
-(display "Bar is "" bar)
+
+(display (string-set! "Why though?"" 10 #\!))
 (newline)

@@ -46,6 +46,8 @@ const (
 	StringFt
 	CharFt
 	Any
+	
+	StrVarFt
 )
 
 func (tf TypeFilter) Matches(ty Type) bool {
@@ -54,6 +56,8 @@ func (tf TypeFilter) Matches(ty Type) bool {
 		return true
 	case NumberFt:
 		return ty == Integer || ty == Float
+	case StrVarFt:
+		return ty == String || ty == Symbol
 	default:
 		return ty == Type(tf)
 	}

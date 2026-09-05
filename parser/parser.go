@@ -136,10 +136,10 @@ func (lex *Lexer) parseGroup() (Scheme, error) {
 }
 
 func (lex *Lexer) parseChar() Unit {
-	tagVal := lex.parseId().Value.(string)
+	tagVal := lex.parseId().Value.(string)[2:]
 
 	var actualChar rune
-	switch tagVal[2:] { // Skip #/
+	switch tagVal { // Skip #/
 	case "newline": actualChar = '\n'
 	case "space": actualChar = ' '
 	default: {
@@ -147,7 +147,7 @@ func (lex *Lexer) parseChar() Unit {
 			log.Warnf("Unimplemented character literal %s, defaulting to the %c", tagVal, []rune(tagVal)[0])
 		}
 		
-		actualChar = []rune(tagVal[2:])[0]
+		actualChar = []rune(tagVal)[0]
 	}
 	}
 

@@ -13,6 +13,7 @@ func (self *Engine) RegisterBuiltins() {
 	self.AddFunc("display", []TypeFilter{Any}, true, display)
 	self.AddFunc("newline", []TypeFilter{}, false, newline)
 
+	self.AddFunc("string?", []TypeFilter{Any}, false, isX(String))
 	self.AddFunc("symbol?", []TypeFilter{Any}, false, isX(Symbol))
 	self.AddFunc("boolean?", []TypeFilter{Any}, false, isX(Bool))
 	self.AddFunc("integer?", []TypeFilter{Any}, false, isX(Integer))
@@ -33,6 +34,90 @@ func (self *Engine) RegisterBuiltins() {
 	self.AddFunc("define", []TypeFilter{SymbolFt, Any}, false, define)
 	
 	self.AddFunc("string", []TypeFilter{CharFt}, true, stringize)
+	self.AddFunc("string-ref", []TypeFilter{StringFt, IntegerFt}, false, stringRef)
+	self.AddFunc("string-append", []TypeFilter{StringFt}, true, stringConcat)
+	self.AddFunc("make-string", []TypeFilter{IntegerFt}, false, stringCreate) // This shouldnt get used much
+	self.AddFunc("string-set!", []TypeFilter{StrVarFt, IntegerFt, CharFt}, false, stringSet) // This shouldnt get used much
+}
+
+func stringSet(e *Engine) error {
+	char := util.Assert(e.Pop()).Value.(rune)
+	idx := util.Assert(e.Pop()).Value.(int64)
+	strVar := util.Assert(e.Pop())
+
+	var trueStrVal string
+
+	if strVar.Type == Symbol {
+		if val, ok := e.vars[strVar.Value.(string)]; !ok {
+			return fmt.Errorf("Undefined variable %s", strVar.Value.(string))
+		} else {
+			trueStrVal = val.Value.(string)
+		}
+	} else {
+		trueStrVal = strVar.Value.(string)
+	}
+
+	asArr := []rune(trueStrVal);
+	if int(idx) > len(asArr) || idx < 0 {
+		return fmt.Errorf("Index %d out of bounds for %d ", idx, len(asArr))
+	}
+
+	asArr[idx] = char;
+
+	if strVar.Type == Symbol {
+		e.vars[strVar.Value.(string)] = MkString(string(asArr))
+	} else {
+		e.Push(MkString(string(asArr)))
+	}
+
+	return nil
+}
+
+func stringCreate(e *Engine) error {
+	var len int64 = util.Assert(e.Pop()).Value.(int64)
+
+	if len < 0 {
+		return fmt.Errorf("Invalid index %d", len)
+	}
+
+	var tmp = make([]rune, len)
+	e.Push(MkString(string(tmp)))
+
+	return nil
+}
+
+func stringConcat(e *Engine) error {
+	var strs []string
+	for {
+		if val,err := e.Pop(); err != nil{
+			break
+		} else {
+			strs = append(strs, val.Value.(string))
+		}
+	}
+
+	var out string
+	idx := len(strs) - 1;
+
+	for idx >= 0 {
+		out = fmt.Sprintf("%s%s", out, strs[idx])
+		idx--
+	}
+
+	e.Push(MkString(out))
+	return nil
+}
+
+func stringRef(e *Engine) error {
+	idx := util.Assert(e.Pop()).Value.(int64)
+	str := util.Assert(e.Pop()).Value.(string)
+
+	if int(idx) > len([]rune(str)) || idx < 0 {
+		return fmt.Errorf("Index %d out of bounds for %d", idx, len([]rune(str)))
+	}
+
+	e.Push(MkChar([]rune(str)[idx]))
+	return nil
 }
 
 func stringize(e *Engine) error {
