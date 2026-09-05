@@ -14,7 +14,7 @@ import (
 	"github.com/nyaosorg/go-readline-ny"
 )
 
-const VERSION = "0.15.0"
+const VERSION = "0.14.1"
 
 func main() {
 	opt := util.Args()
@@ -34,7 +34,7 @@ func main() {
 				log.Errorf("Failed to read input: %s", err)
 			} else {
 				if err := lispEngine.ExecuteStr(text); err != nil {
-					log.Errorf("Execution failed: %s", err)
+					fmt.Print(aurora.Red("Execution failed:"), "\n", err)
 				}
 
 				if v, e := lispEngine.Pop(); e == nil { // If the last call pushed a value, print it
