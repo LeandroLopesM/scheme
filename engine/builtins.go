@@ -29,10 +29,33 @@ func (self *Engine) RegisterBuiltins() {
 	self.AddFunc("expt", []TypeFilter{NumberFt}, true, expt)
 
 	self.AddFunc("eqv", []TypeFilter{Any}, true, eqv)
-
-	// self.AddFunc("quote", []TypeFilter{SymbolFt}, false, quote)
-
+	
 	self.AddFunc("define", []TypeFilter{SymbolFt, Any}, false, define)
+	
+	self.AddFunc("string", []TypeFilter{CharFt}, true, stringize)
+}
+
+func stringize(e *Engine) error {
+	var chars []rune
+	for {
+		if val,err := e.Pop(); err != nil{
+			break
+		} else {
+			chars = append(chars, val.Value.(rune))
+		}
+	}
+
+	var out []rune
+	idx := len(chars) - 1;
+
+	for idx >= 0 {
+		out = append(out, chars[idx])
+
+		idx--
+	}
+
+	e.Push(MkString(string(out)))
+	return nil
 }
 
 func define(e *Engine) error {

@@ -21,6 +21,7 @@ var TypeFilterNames = map[TypeFilter](string){
 	FloatFt:   "Float",
 	BoolFt:    "Bool",
 	StringFt:  "String",
+	CharFt:  "Char",
 	Any:       "Any",
 }
 
@@ -43,6 +44,7 @@ const (
 	FloatFt
 	BoolFt
 	StringFt
+	CharFt
 	Any
 )
 
