@@ -228,20 +228,14 @@ func newline(e *Engine) error {
 }
 
 func eqv(e *Engine) error {
-	lhs, lErr := e.Pop()
-	rhs, rErr := e.Pop()
-
-	switch {
-	case lErr != nil:
-		return lErr
-	case rErr != nil:
-		return rErr
-	}
+	lhs := util.Assert(e.Pop()) // We can assert because the argCount was checked
+	rhs := util.Assert(e.Pop())
 
 	if lhs.Type != rhs.Type {
 		e.Push(MkBool(false))
 	}
 
+	e.Push(MkBool(lhs == rhs))
 	return nil
 }
 
