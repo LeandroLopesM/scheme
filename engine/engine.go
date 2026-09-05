@@ -99,13 +99,6 @@ func (self *Engine) ExecuteStr(code string) error {
 	return nil
 }
 
-func (self *Engine) printStack() {
-	log.Debug("Current stack:")
-	for _,u := range self.stack.raw[0:self.stack.ptr] {
-		log.Debug("%s", SprintUnit(u))
-	}
-}
-
 func (self *Engine) GetVar(name string) (Unit, error) {
 	if v,ok := self.vars[name]; !ok {
 		return Unit{}, fmt.Errorf("Undefined variable '%s'", name)
