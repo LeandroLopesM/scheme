@@ -1,5 +1,5 @@
 (define foo 9)
-(define bar "Not an int"")
+(define bar #\a)
 (display "Foo is "")
 (display foo)
 (newline)

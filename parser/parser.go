@@ -147,7 +147,7 @@ func (lex *Lexer) parseChar() Unit {
 			log.Warnf("Unimplemented character literal %s, defaulting to the %c", tagVal, []rune(tagVal)[0])
 		}
 		
-		actualChar = []rune(tagVal)[0]
+		actualChar = []rune(tagVal[2:])[0]
 	}
 	}
 
