@@ -10,20 +10,23 @@ import (
 func stringSet(e *Engine) error {
 	char := util.Assert(e.Pop()).Value.(rune)
 	idx := util.Assert(e.Pop()).Value.(int64)
-	strVar,err := e.GetVar(util.Assert(e.Pop()).Value.(string))
+	strVarName := util.Assert(e.Pop()).Value.(string)
+	strVar,err := e.GetVar(strVarName)
 
 	if err != nil {
 		return err
+	} else if strVar.Type != String {
+		return fmt.Errorf("Expected 'String', got '%s'", TypeNames[strVar.Type])
 	}
 
 	asArr := []rune(strVar.Value.(string))
-	if int(idx) > len(asArr) || idx < 0 {
+	if int(idx) > len(asArr) - 1 || idx < 0 {
 		return fmt.Errorf("Index %d out of bounds for %d ", idx, len(asArr))
 	}
 
 	asArr[idx] = char
 
-	e.SetVar(strVar.Value.(string), MkString(string(asArr)))
+	e.SetVar(strVarName, MkString(string(asArr)))
 
 	return nil
 }

@@ -11,6 +11,8 @@ type Scheme struct {
 	Position Position
 }
 
+type VectorVal = []Unit
+
 func (pos Position) ToString() string {
 	return fmt.Sprintf("%s:%d:%d", pos.File, pos.Line, pos.Char)
 }
@@ -95,6 +97,12 @@ func MkString(v string) Unit {
 func MkChar(v rune) Unit {
 	return Unit{
 		Type:  Char,
+		Value: v,
+	}
+}
+func MkVector(v []Unit) Unit {
+	return Unit {
+		Type:  Vector,
 		Value: v,
 	}
 }

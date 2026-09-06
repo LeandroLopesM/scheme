@@ -30,6 +30,17 @@ func SprintUnit(unit Unit) string {
 		return fmt.Sprintf("%v", unit.Value.(bool))
 	case Char:
 		return fmt.Sprintf("%c", unit.Value.(rune))
+	case Vector:
+		asVec := unit.Value.(VectorVal)
+		var ret string
+		for i := range asVec {
+			if i != 0 {
+				ret = fmt.Sprintf("%s, %s", ret, SprintUnit(asVec[i]))
+			} else {
+				ret = fmt.Sprintf("[ %s", SprintUnit(asVec[i]))
+			}
+		}
+		return fmt.Sprintf("%s ]", ret)
 	default:
 		panic(fmt.Sprintf("Unknown type %v", unit))
 	}

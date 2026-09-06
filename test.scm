@@ -1,8 +1,8 @@
-(define bar "Why though?"")
+(define bar (vector 1 2 #\c))
 
 (display bar)
 (newline)
 
-(string-set! bar 10 #\!)
+(vector-set! bar 2 #\!)
 (display bar)
 (newline)

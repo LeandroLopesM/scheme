@@ -37,6 +37,11 @@ func (eng *Engine) RegisterBuiltins() {
 	eng.AddFunc("make-string", []Type{Integer}, false, String, stringCreate) // This shouldnt get used much
 	eng.AddFunc("string-set!", []Type{Symbol, Integer, Char}, false, String, stringSet) // This shouldnt get used much
 	
+	eng.AddFunc("vector", []Type{Any}, true, Vector, vector)
+	eng.AddFunc("vector-ref", []Type{Vector, Integer}, false, Any, vector)
+	eng.AddFunc("make-vector", []Type{Integer}, false, Vector, vectorCreate) // This shouldnt get used much
+	eng.AddFunc("vector-set!", []Type{Symbol, Integer, Any}, false, Vector, vectorSet) // This shouldnt get used much
+	
 	eng.AddFunc("char=?", []Type{Char}, false, Bool, charOp("="))
 	eng.AddFunc("char>?", []Type{Char}, false, Bool, charOp(">"))
 	eng.AddFunc("char<?", []Type{Char}, false, Bool, charOp("<"))
