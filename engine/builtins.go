@@ -36,6 +36,18 @@ func (eng *Engine) RegisterBuiltins() {
 	eng.AddFunc("string-append", []Type{String}, true, String, stringConcat)
 	eng.AddFunc("make-string", []Type{Integer}, false, String, stringCreate) // This shouldnt get used much
 	eng.AddFunc("string-set!", []Type{Symbol, Integer, Char}, false, String, stringSet) // This shouldnt get used much
+	
+	eng.AddFunc("char=?", []Type{Char}, false, Bool, charOp("="))
+	eng.AddFunc("char>?", []Type{Char}, false, Bool, charOp(">"))
+	eng.AddFunc("char<?", []Type{Char}, false, Bool, charOp("<"))
+	eng.AddFunc("char>=?", []Type{Char}, false, Bool, charOp(">="))
+	eng.AddFunc("char<=?", []Type{Char}, false, Bool, charOp("<="))
+	
+	eng.AddFunc("char-ci=?", []Type{Char}, false, Bool, charCiOp("="))
+	eng.AddFunc("char-ci>?", []Type{Char}, false, Bool, charCiOp(">"))
+	eng.AddFunc("char-ci<?", []Type{Char}, false, Bool, charCiOp("<"))
+	eng.AddFunc("char-ci>=?", []Type{Char}, false, Bool, charCiOp(">="))
+	eng.AddFunc("char-ci<=?", []Type{Char}, false, Bool, charCiOp("<="))
 }
 
 func define(e *Engine) error {
