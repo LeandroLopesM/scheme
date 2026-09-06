@@ -53,6 +53,13 @@ func (eng *Engine) RegisterBuiltins() {
 	eng.AddFunc("char-ci<?", []Type{Char}, false, Bool, charCiOp("<"))
 	eng.AddFunc("char-ci>=?", []Type{Char}, false, Bool, charCiOp(">="))
 	eng.AddFunc("char-ci<=?", []Type{Char}, false, Bool, charCiOp("<="))
+	
+	eng.AddFunc("car", []Type{Pair}, false, Any, pairGet(0))
+	eng.AddFunc("cdr", []Type{Pair}, false, Any, pairGet(1))
+	eng.AddFunc("set-car!", []Type{Symbol}, false, None, pairSet(0))
+	eng.AddFunc("set-cdr!", []Type{Symbol}, false, None, pairSet(1))
+	eng.AddFunc("cons", []Type{Any, Any}, false, Pair, newPair)
+	
 }
 
 func define(e *Engine) error {

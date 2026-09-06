@@ -11,6 +11,7 @@ type Scheme struct {
 	Position Position
 }
 
+type PairVal = [2]Unit
 type VectorVal = []Unit
 
 func (pos Position) ToString() string {
@@ -25,6 +26,7 @@ var TypeNames = map[Type](string){
 	String:  "String",
 	Char:  "Char",
 	Vector:  "Vector",
+	Pair:  "Pair",
 }
 
 type Type int
@@ -38,6 +40,7 @@ const (
 	String
 	Char
 	Vector
+	Pair
 
 	// Misc filters for arguments, not actual unit values
 	None
@@ -103,6 +106,12 @@ func MkChar(v rune) Unit {
 func MkVector(v []Unit) Unit {
 	return Unit {
 		Type:  Vector,
+		Value: v,
+	}
+}
+func MkPair(v PairVal) Unit {
+	return Unit {
+		Type:  Pair,
 		Value: v,
 	}
 }

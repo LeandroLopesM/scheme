@@ -1,8 +1,3 @@
-(define bar (vector 1 2 #\c))
+(define bar (cons 123 (cons "X"" #\y)))
 
-(display bar)
-(newline)
-
-(vector-set! bar 2 #\!)
-(display bar)
-(newline)
+(display "Bar is "" (car bar) ", "" (car (cdr bar)))

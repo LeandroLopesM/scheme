@@ -30,6 +30,9 @@ func SprintUnit(unit Unit) string {
 		return fmt.Sprintf("%v", unit.Value.(bool))
 	case Char:
 		return fmt.Sprintf("%c", unit.Value.(rune))
+	case Pair:
+		asPair := unit.Value.(PairVal)
+		return fmt.Sprintf("(%v . %v)", SprintUnit(asPair[0]), SprintUnit(asPair[1]))
 	case Vector:
 		asVec := unit.Value.(VectorVal)
 		var ret string
@@ -64,6 +67,22 @@ func debugUnit(unit Unit, depth int) {
 		log.Debugf("%sString \"%s\"", repeat(depth), unit.Value.(string))
 	case Char:
 		log.Debugf("%sChar %c", repeat(depth), unit.Value.(rune))
+	case Pair:
+		asPair := unit.Value.(PairVal)
+		log.Debugf("%sPair (%v . %v)", repeat(depth), SprintUnit(asPair[0]), SprintUnit(asPair[1]))
+	case Vector:
+		asVec := unit.Value.(VectorVal)
+		var ret string
+		for i := range asVec {
+			if i != 0 {
+				ret = fmt.Sprintf("%s %s", ret, SprintUnit(asVec[i]))
+			} else {
+				ret = fmt.Sprintf("#(%s", SprintUnit(asVec[i]))
+			}
+		}
+		ret = fmt.Sprintf("%s)", ret)
+
+		log.Debugf("%sVector %s", repeat(depth), ret)
 	default:
 		log.Warnf("%sUnknown %v", repeat(depth), unit.Value)
 	}
