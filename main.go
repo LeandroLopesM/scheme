@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	log "github.com/charmbracelet/log"
+	"github.com/leandrolopesm/scheme/builtin"
 	"github.com/leandrolopesm/scheme/core"
 	"github.com/leandrolopesm/scheme/engine"
 	"github.com/leandrolopesm/scheme/util"
@@ -14,13 +15,14 @@ import (
 	"github.com/nyaosorg/go-readline-ny"
 )
 
-const VERSION = "0.19.0"
+const VERSION = "0.20.0"
 
 func main() {
 	opt := util.Args()
 	util.Logger(opt)
 
 	lispEngine := engine.New()
+	builtin.RegisterSelf(&lispEngine)
 
 	if opt.Repl {
 		var editor readline.Editor

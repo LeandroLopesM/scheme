@@ -1,9 +1,10 @@
-package engine
+package builtin
 
 import (
 	"unicode"
 
 	. "github.com/leandrolopesm/scheme/core"
+	. "github.com/leandrolopesm/scheme/engine"
 	"github.com/leandrolopesm/scheme/util"
 )
 

@@ -44,9 +44,7 @@ func New() Engine {
 		vars:  make(map[string]Unit),
 		funcs: make(map[string]Builtin),
 	}
-
-	ret.RegisterBuiltins()
-
+	
 	return ret
 }
 

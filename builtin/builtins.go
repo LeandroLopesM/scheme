@@ -1,13 +1,14 @@
-package engine
+package builtin
 
 import (
 	"errors"
 
 	. "github.com/leandrolopesm/scheme/core"
+	. "github.com/leandrolopesm/scheme/engine"
 	"github.com/leandrolopesm/scheme/util"
 )
 
-func (eng *Engine) RegisterBuiltins() {
+func RegisterSelf(eng *Engine) {
 	eng.AddFunc("display", []Type{Any}, true, None, display)
 	eng.AddFunc("newline", []Type{}, false, None, newline)
 

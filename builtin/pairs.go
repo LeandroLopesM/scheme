@@ -1,7 +1,8 @@
-package engine
+package builtin
 
 import (
 	. "github.com/leandrolopesm/scheme/core"
+	. "github.com/leandrolopesm/scheme/engine"
 	"github.com/leandrolopesm/scheme/util"
 )
 
