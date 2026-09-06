@@ -108,6 +108,10 @@ func (self *Engine) GetVar(name string) (Unit, error) {
 	}
 }
 
+func (self *Engine) SetVar(name string, val Unit) {
+	self.vars[name] = val;
+}
+
 func (self *Engine) checkScheme(scheme Scheme) error {
 	var actualFn Builtin
 	if fn, ok := self.funcs[scheme.Name]; !ok {
