@@ -15,52 +15,14 @@ func (pos Position) ToString() string {
 	return fmt.Sprintf("%s:%d:%d", pos.File, pos.Line, pos.Char)
 }
 
-var TypeFilterNames = map[TypeFilter](string){
-	SymbolFt:   "Symbolifier",
-	IntegerFt: "Integer",
-	FloatFt:   "Float",
-	BoolFt:    "Bool",
-	StringFt:  "String",
-	CharFt:  "Char",
-	Any:       "Any",
-}
-
 var TypeNames = map[Type](string){
-	Symbol:   "Symbolifier",
+	Symbol:   "Symbol",
 	Integer: "Integer",
 	Float:   "Float",
 	Bool:    "Bool",
 	String:  "String",
 	Char:  "Char",
-}
-
-type TypeFilter int
-
-const (
-	NumberFt TypeFilter = iota
-
-	SymbolFt
-	IntegerFt
-	FloatFt
-	BoolFt
-	StringFt
-	CharFt
-	Any
-	
-	StrVarFt
-)
-
-func (tf TypeFilter) Matches(ty Type) bool {
-	switch tf {
-	case Any:
-		return true
-	case NumberFt:
-		return ty == Integer || ty == Float
-	case StrVarFt:
-		return ty == String || ty == Symbol
-	default:
-		return ty == Type(tf)
-	}
+	Vector:  "Vector",
 }
 
 type Type int
@@ -73,7 +35,27 @@ const (
 	Bool
 	String
 	Char
+	Vector
+
+	// Misc filters for arguments, not actual unit values
+	None
+	Any
+	Number
+	StrVar
 )
+
+func (tf Type) Matches(ty Type) bool {
+	switch tf {
+	case Any:
+		return true
+	case Number:
+		return ty == Integer || ty == Float
+	case StrVar:
+		return ty == String || ty == Symbol
+	default:
+		return ty == Type(tf)
+	}
+}
 
 type Position struct {
 	Line, Char int

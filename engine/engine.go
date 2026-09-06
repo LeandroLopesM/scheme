@@ -16,7 +16,7 @@ import (
 type BuiltinExec func(e *Engine) error
 
 type Builtin struct {
-	Args    []TypeFilter
+	Args    []Type
 	VarArgs bool
 
 	Ret Type
@@ -146,7 +146,7 @@ func (self *Engine) checkScheme(scheme Scheme) error {
 			return fmt.Errorf(
 				"Incorrect argument type for '%s'. Expected '%s' got '%s'",
 				scheme.Name,
-				TypeFilterNames[actualFn.Args[idx]],
+				TypeNames[actualFn.Args[idx]],
 				TypeNames[inType],
 			)
 		}
@@ -171,7 +171,7 @@ func (self *Engine) runScheme(scheme Scheme) error {
 			}
 		case Symbol:
 			fnArgIdx := util.If(fn.VarArgs, 0, i)
-			
+
 			if !fn.Args[fnArgIdx].Matches(Symbol) || fn.Args[fnArgIdx] == Any { // Any is shorthand for anything OTHER THAN Symbol
 				v,_ := self.GetVar(arg.Value.(string))
 				self.Push(v)
@@ -193,7 +193,7 @@ func (self *Engine) runScheme(scheme Scheme) error {
 	return nil
 }
 
-func (self *Engine) AddFunc(name string, args []TypeFilter, isVarArg bool, call BuiltinExec) error {
+func (self *Engine) AddFunc(name string, args []Type, isVarArg bool, ret Type, call BuiltinExec) error {
 	for k := range self.funcs {
 		if k == name {
 			return fmt.Errorf("Attemt to redeclare function %s", name)
@@ -204,6 +204,8 @@ func (self *Engine) AddFunc(name string, args []TypeFilter, isVarArg bool, call 
 		Args:    args,
 		VarArgs: isVarArg,
 		Call:    call,
+
+		Ret: ret,
 	}
 
 	return nil

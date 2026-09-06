@@ -10,34 +10,34 @@ import (
 )
 
 func (self *Engine) RegisterBuiltins() {
-	self.AddFunc("display", []TypeFilter{Any}, true, display)
-	self.AddFunc("newline", []TypeFilter{}, false, newline)
+	self.AddFunc("display", []Type{Any}, true, None, display)
+	self.AddFunc("newline", []Type{}, false, None, newline)
 
-	self.AddFunc("string?", []TypeFilter{Any}, false, isX(String))
-	self.AddFunc("symbol?", []TypeFilter{Any}, false, isX(Symbol))
-	self.AddFunc("boolean?", []TypeFilter{Any}, false, isX(Bool))
-	self.AddFunc("integer?", []TypeFilter{Any}, false, isX(Integer))
-	self.AddFunc("rational?", []TypeFilter{Any}, false, isX(Float))
-
-	self.AddFunc("+", []TypeFilter{NumberFt}, true, MathOp('+'))
-	self.AddFunc("-", []TypeFilter{NumberFt}, true, MathOp('-'))
-	self.AddFunc("*", []TypeFilter{NumberFt}, true, MathOp('*'))
-	self.AddFunc("/", []TypeFilter{NumberFt}, true, MathOp('/'))
-
-	self.AddFunc("max", []TypeFilter{NumberFt}, true, OrdOp('>'))
-	self.AddFunc("min", []TypeFilter{NumberFt}, true, OrdOp('<'))
-
-	self.AddFunc("expt", []TypeFilter{NumberFt}, true, expt)
-
-	self.AddFunc("eqv", []TypeFilter{Any}, true, eqv)
+	self.AddFunc("string?", []Type{Any}, false, Bool, isX(String))
+	self.AddFunc("symbol?", []Type{Any}, false, Bool, isX(Symbol))
+	self.AddFunc("boolean?", []Type{Any}, false, Bool, isX(Bool))
+	self.AddFunc("integer?", []Type{Any}, false, Bool, isX(Integer))
+	self.AddFunc("rational?", []Type{Any}, false, Bool, isX(Float))
 	
-	self.AddFunc("define", []TypeFilter{SymbolFt, Any}, false, define)
+	self.AddFunc("+", []Type{Number}, true, Number, MathOp('+'))
+	self.AddFunc("-", []Type{Number}, true, Number, MathOp('-'))
+	self.AddFunc("*", []Type{Number}, true, Number, MathOp('*'))
+	self.AddFunc("/", []Type{Number}, true, Number, MathOp('/'))
+	self.AddFunc("expt", []Type{Number}, true, Number, expt)
+
+	self.AddFunc("max", []Type{Number}, true, Number, OrdOp('>'))
+	self.AddFunc("min", []Type{Number}, true, Number, OrdOp('<'))
+
+
+	self.AddFunc("eqv", []Type{Any}, true, Bool, eqv)
 	
-	self.AddFunc("string", []TypeFilter{CharFt}, true, stringize)
-	self.AddFunc("string-ref", []TypeFilter{StringFt, IntegerFt}, false, stringRef)
-	self.AddFunc("string-append", []TypeFilter{StringFt}, true, stringConcat)
-	self.AddFunc("make-string", []TypeFilter{IntegerFt}, false, stringCreate) // This shouldnt get used much
-	self.AddFunc("string-set!", []TypeFilter{StrVarFt, IntegerFt, CharFt}, false, stringSet) // This shouldnt get used much
+	self.AddFunc("define", []Type{Symbol, Any}, false, None, define)
+	
+	self.AddFunc("string", []Type{Char}, true, String, stringize)
+	self.AddFunc("string-ref", []Type{String, Integer}, false, Char, stringRef)
+	self.AddFunc("string-append", []Type{String}, true, String, stringConcat)
+	self.AddFunc("make-string", []Type{Integer}, false, String, stringCreate) // This shouldnt get used much
+	self.AddFunc("string-set!", []Type{Symbol, Integer, Char}, false, String, stringSet) // This shouldnt get used much
 }
 
 func stringSet(e *Engine) error {
@@ -47,14 +47,10 @@ func stringSet(e *Engine) error {
 
 	var trueStrVal string
 
-	if strVar.Type == Symbol {
-		if val, ok := e.vars[strVar.Value.(string)]; !ok {
-			return fmt.Errorf("Undefined variable %s", strVar.Value.(string))
-		} else {
-			trueStrVal = val.Value.(string)
-		}
+	if val, ok := e.vars[strVar.Value.(string)]; !ok {
+		return fmt.Errorf("Undefined variable %s", strVar.Value.(string))
 	} else {
-		trueStrVal = strVar.Value.(string)
+		trueStrVal = val.Value.(string)
 	}
 
 	asArr := []rune(trueStrVal);
@@ -64,11 +60,7 @@ func stringSet(e *Engine) error {
 
 	asArr[idx] = char;
 
-	if strVar.Type == Symbol {
-		e.vars[strVar.Value.(string)] = MkString(string(asArr))
-	} else {
-		e.Push(MkString(string(asArr)))
-	}
+	e.vars[strVar.Value.(string)] = MkString(string(asArr))
 
 	return nil
 }
@@ -276,7 +268,7 @@ func MathOp(kind rune) BuiltinExec {
 	}
 
 	return func(e *Engine) error {
-		filter := NumberFt
+		filter := Number
 		var numbers []Unit
 		var outType Type = Integer // We can be optimistic, right?
 

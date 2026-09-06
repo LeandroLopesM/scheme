@@ -3,5 +3,6 @@
 (display bar)
 (newline)
 
-(display (string-set! "Why though?"" 10 #\!))
+(string-set! bar 10 #\!)
+(display bar)
 (newline)
