@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,298 +13,257 @@ import (
 
 type Lexer struct {
 	iter Iterator[rune]
-	line int
+	line, lastLineOff int
 	file string
 }
 
 func (lex *Lexer) Error(msg string) error {
-	return fmt.Errorf("%v:%v: %v", lex.line, lex.iter.Tell(), msg)
+	return fmt.Errorf("%s:%v:%v: %v", lex.file, lex.line, lex.iter.Tell() - lex.lastLineOff, msg)
 }
 
-func Lex(fileName string, raw string) ([]Unit, error) {
+func Lex(file, raw string) ([]Unit, error) {
 	lex := Lexer {
 		iter: NewIterator([]rune(raw)),
 		line: 1,
-		file: fileName,
+		file: file,
 	}
 
 	var out []Unit
-	currVal, err := lex.iter.Curr()
 
-	for err == nil {
-		switch *currVal {
-		case '\n', '\r':
-			lex.line++
+	for {
+		if val, err := lex.parseUnit(); err != nil {
+			if err == iterEnd {
+				return out, nil
+			}
+
+			return out, err
+		} else {
+			out = append(out, val)
+		}
+	}
+}
+
+var iterEnd = errors.New("Iterator ended")
+var schemeEnd = errors.New("Scheme ended (')')")
+
+func (lex *Lexer) parseUnit() (Unit, error) {
+start:
+	curr, err := lex.iter.Curr();
+
+	if err == nil {
+		switch curr {
 		case ';':
-		for err == nil {
-			if *currVal == '\n' {
-				lex.iter.Prev()
-				break
-			}
-
-			currVal, err = lex.iter.Next()
-		}
-		case '(':
+			lex.skipComment()
+		case '\n':
 			lex.iter.Consume()
-
-			if group, e := lex.parseGroup(); e != nil {
-				return out, e
-			} else {
-				out = append(out, Unit{
-					Type: SchemeType,
-					Value: group,
-				})
-			}
-		}
-
-		currVal,err = lex.iter.Next()
-	}
-
-	return out, nil
-}
-
-func (lex *Lexer) parseGroup() (Scheme, error) {
-	var out Scheme;
-
-	out.Position = Position {
-		Line: lex.line,
-		Char: lex.iter.Tell(),
-
-		File: lex.file,
-	}
-
-	out.Name = lex.parseId().Value.(string)
-
-	val, err := lex.iter.Next();
-
-	for err == nil {
-		switch {
-		case *val == ')': return out, nil 
-		case *val == '\n':
 			lex.line++
-			goto nxt
-		case *val == ';':
-			for err == nil {
-				if *val == '\n' {
-					lex.iter.Prev()
-					break
-				}
-
-				val, err = lex.iter.Next()
-			}
-		case isWhitespace(*val):
-			goto nxt
-
-		case unicode.IsDigit(*val):
-			if val, err := lex.parseNum(); err == nil {
-				out.Args = append(out.Args, val)
-			} else {
-				return Scheme{}, err
-			}
-
-		case *val == '"':
-			lex.iter.Consume()
-			if val,err := lex.parseStr(); err == nil {
-				out.Args = append(out.Args, val)
-			} else {
-				return Scheme{},err
-			}
-		
-		case *val == '(': 
-			lex.iter.Consume()
-			if val,err := lex.parseGroup(); err == nil {
-				out.Args = append(out.Args, Unit{ Type: SchemeType, Value: val })
-			} else {
-				return Scheme{},err
-			}
-
-		case *val == '#':
-			out.Args = append(out.Args, lex.parseTag())
-
-		case isSymbolVal(*val):
-			out.Args = append(out.Args, lex.parseId())
-		
+			lex.lastLineOff = lex.iter.Tell()
+			goto start;
+		case '"':
+			return lex.parseString();
+		case '(':
+			return lex.parseScheme();
+		case ')':
+			return Unit{}, schemeEnd;
+		case '#':
+			return lex.parseTag(), nil;
+		case '\'':
+			return lex.parseQuote();
 		default:
-			return Scheme{},lex.Error(fmt.Sprintf("Unexpected parseme %c", *val))
+			switch {
+			case unicode.IsDigit(curr):
+				return lex.parseNum()
+			case unicode.IsSpace(curr):
+				lex.iter.Consume();
+				goto start;
+			default:
+				return lex.parseSymbol(), nil
+			}
 		}
-
-		nxt:
-		val, err = lex.iter.Next()
 	}
 
-	// return out, nil
-	return Scheme{}, lex.Error(fmt.Sprintf("Scheme '%s': Expected ')'", out.Name))
+	return Unit{}, iterEnd
 }
 
-func (lex *Lexer) parseChar() Unit {
-	tagVal := lex.parseId().Value.(string)[2:]
+func (lex *Lexer) parseString() (Unit, error) {
+	val, err := lex.iter.Next();
+	var buffer []rune
+	for err == nil {
+		if val == '"' && lex.iter.PrevOr(' ') != '\\' {
+			lex.iter.Consume();
+			lex.iter.Consume();
 
-	var actualChar rune
-	switch tagVal { // Skip #/
-	case "newline": actualChar = '\n'
-	case "space": actualChar = ' '
-	default: {
-		if len(tagVal) > 1 {
-			log.Warnf("Unimplemented character literal %s, defaulting to the %c", tagVal, []rune(tagVal)[0])
-		}
-		
-		actualChar = []rune(tagVal)[0]
-	}
+			return Unit {
+				Type: String,
+				Value: string(buffer),
+			}, nil
+		} 
+		buffer = append(buffer, val)
+
+		val, err = lex.iter.Next();
 	}
 
-	return Unit {
-		Type: Char,
-		Value: actualChar,
+	return Unit{}, lex.Error("Unclosed string");
+}
+
+func (lex *Lexer) parseQuote() (Unit, error) {
+	lex.iter.Consume() // eat '
+	
+	if val, err := lex.parseUnit(); err != nil {
+		return Unit{}, err
+	} else {
+		return Unit {
+			Type: SchemeType,
+			Value: Scheme {
+				Name: "quote",
+				Args: []Unit {
+					val,
+				},
+			},
+		}, nil
 	}
 }
 
-func (lex *Lexer) parseBool() Unit {
-	postfix,_ := lex.iter.Curr() // Eat the postfix
-
-	val := *postfix == 't' 
-	return Unit{
-		Type: Bool,
-		Value: val,
+func (lex *Lexer) parseScheme() (Unit, error) {
+	lex.iter.Consume() // Discard (
+	out := Scheme {
+		Name: lex.parseSymbol().Value.(string),
 	}
+
+	_, err := lex.iter.Curr()
+	
+	var val Unit
+	for err == nil {
+		if val, err = lex.parseUnit(); err != nil {
+			if err == schemeEnd {
+				lex.iter.Consume()
+				
+				return Unit{
+					Type: SchemeType,
+					Value: out,
+				}, nil
+			}
+
+			return Unit{}, err
+		} else {
+			out.Args = append(out.Args, val)
+		}
+
+		// _, err = lex.iter.Next();
+	}
+
+	return Unit{}, lex.Error(fmt.Sprintf("Scheme '%s': Missing closing ')'", out.Name))
 }
 
 func (lex *Lexer) parseTag() Unit {
-	next := lex.iter.PeekOr(' ');
+	asIdent := lex.parseSymbol(); // #...
+	asStr := asIdent.Value.(string); // #...
 
-	switch next {
-	case '\\':
-		return lex.parseChar()
-	case 't', 'f', 'T', 'F':
-		return lex.parseBool()
-	default:
-		return lex.parseId()
+	if len(asStr) > 1 {
+		switch []rune(asStr)[1] {
+		case '\\':
+			return lex.parseChar(asStr);
+		case 't', 'f':
+			return lex.parseBool(asStr[1:]);
+		}
+	}
+
+	return asIdent
+}
+
+func (lex *Lexer) parseBool(str string) Unit {
+	return Unit{
+		Type: Bool,
+		Value: str == "t",
 	}
 }
 
-func (lex *Lexer) parseId() Unit {
-	var buffer []rune
-
-	v, e := lex.iter.Curr()
-	for e == nil {
-		if !isSymbolVal(*v) {
-			_,_ = lex.iter.Prev();
-			break
+func (lex *Lexer) parseChar(str string) Unit {
+	var char rune
+	switch str[2:] {
+	case "newline":
+		char = '\n'
+	case "space":
+		char = ' '
+	default:
+		if len(str[2:]) > 1 {
+			log.Warnf("Unknown character expr '%s', using '%c'", str, str[2])
 		}
 
-		
-		buffer = append(buffer, *v)
-		v, e = lex.iter.Next()
+		char = []rune(str)[2]
 	}
 
-	
 	return Unit{
-		Type: Symbol,
-		Value: string(buffer),
+		Type: Char,
+		Value: char,
 	}
 }
 
 func (lex *Lexer) parseNum() (Unit, error) {
-	var buffer []rune
+	num := lex.parseSymbol().Value.(string)
 
-	v, e := lex.iter.Curr()
-	for e == nil {
-		if !unicode.IsDigit(*v) && !isHex(*v) && !isPrefix(*v) && *v != '.' {
-			_,_ = lex.iter.Prev();
-			break
-		}
-
-		buffer = append(buffer, *v)
-		v, e = lex.iter.Next()
-	}
-
-	asStr := string(buffer)
-
-	
-	if strings.Contains(asStr, ".") {
-		if val, err := strconv.ParseFloat(asStr, 64); err != nil {
-			return Unit{}, lex.Error(fmt.Sprintf("Invalid floating point literal '%v'", asStr))
+	if strings.Contains(num, ".") {
+		if val, err := strconv.ParseFloat(num, 64); err != nil {
+			return Unit{}, lex.Error(fmt.Sprintf("Invalid float number '%s'", num))
 		} else {
-			return Unit{
+			return Unit {
 				Type: Float,
 				Value: val,
 			}, nil
 		}
 	}
 
-	var radix int
-
-	if startsWith(asStr, "0x") {
+	radix := 10
+	if strings.ContainsAny(num, "ABCDEFabcdef") {
 		radix = 16
-	} else if startsWith(asStr, "0b") {
-		radix = 2
-	} else {
-		radix = 10
 	}
 
-	if val, err := strconv.ParseInt(asStr, radix, 64); err != nil {
-		return Unit{}, lex.Error(fmt.Sprintf("Invalid integer literal '%v'", asStr))
+	if val, err := strconv.ParseInt(num,radix, 64); err != nil {
+		return Unit{}, lex.Error(fmt.Sprintf("Invalid integer '%s'", num))
 	} else {
-		return Unit{
+		return Unit {
 			Type: Integer,
 			Value: val,
 		}, nil
 	}
 }
 
-func (lex *Lexer) parseStr() (Unit, error) {
-	var out []rune
+func (lex *Lexer) parseSymbol() Unit {
+	var buff []rune
+	nxt, err := lex.iter.Curr()
+	
+	for err == nil {
+		buff = append(buff, nxt)
 
-	start := lex.iter.Tell();
-
-	v,e := lex.iter.Curr()
-	for e == nil {
-		if *v == '"' && lex.iter.PeekOr(' ') == '"' { // Strings end in ""
-			lex.iter.Consume() // Glomp '"'
+		if nxt,err = lex.iter.Next(); err != nil {
+			lex.iter.Consume()
+			break
+		} else if !isIdentChar(nxt) {
+			// _,_ = lex.iter.Prev()
 			break
 		}
-
-		out = append(out, *v)
-		v,e = lex.iter.Next()
 	}
 
-	if e != nil {
-		return Unit{}, lex.Error(fmt.Sprintf("Unclosed string ..\"%s\"..", stringAround(5, lex.iter.elems, start)))
+	return Unit {
+		Type: Symbol,
+		Value: string(buff),
 	}
-
-	return Unit{
-		Type: String,
-		Value: string(out),
-	}, nil
 }
 
-func startsWith(str string, str2 string) bool {
-	var cmp string = str2
+func isIdentChar(char rune) bool {
+	return !(unicode.IsSpace(char) || char == ')' || char == '(')
+}
 
-	if len(str) < len(str2) {
-		cmp = str
-	}
-
-	for i := range cmp {
-		if str[i] != str2[i] {
-			return false
+func (lex *Lexer) skipComment() {
+	curr, err := lex.iter.Curr()
+	for err == nil {
+		if curr, err = lex.iter.Next(); err != nil {
+			return;
+		} else {
+			if curr == '\n' {
+				_,_ = lex.iter.Prev()
+				return;
+			}
 		}
 	}
-
-	return true
-}
-
-func isWhitespace(c rune) bool {
-	return c == '\t' || c == ' ' || c == '\n' || c == '\r'
-}
-
-func isHex(c rune) bool {
-	return strings.Contains("ABCDEFG", string(c))
-}
-
-func isPrefix(c rune) bool {
-	return c == 'b' || c == 'x'
-}
-
-func isSymbolVal(c rune) bool {
-	return !(c == '(' || c == ')' || isWhitespace(c))
 }
