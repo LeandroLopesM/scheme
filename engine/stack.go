@@ -3,7 +3,7 @@ package engine
 import (
 	"errors"
 
-	"github.com/leandrolopesm/scheme/util"
+	"github.com/leandrolopesm/eunuch/util"
 )
 
 const STACK_SIZE = 64

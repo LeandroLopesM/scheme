@@ -8,7 +8,7 @@ import (
 	"unicode"
 
 	"github.com/charmbracelet/log"
-	. "github.com/leandrolopesm/scheme/core"
+	. "github.com/leandrolopesm/eunuch/core"
 )
 
 type Lexer struct {

@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/log"
-	. "github.com/leandrolopesm/scheme/core"
-	"github.com/leandrolopesm/scheme/parser"
-	"github.com/leandrolopesm/scheme/util"
+	. "github.com/leandrolopesm/eunuch/core"
+	"github.com/leandrolopesm/eunuch/parser"
+	"github.com/leandrolopesm/eunuch/util"
 	"github.com/logrusorgru/aurora/v4"
 )
 

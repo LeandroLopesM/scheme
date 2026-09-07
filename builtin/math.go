@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math"
 
-	. "github.com/leandrolopesm/scheme/core"
-	. "github.com/leandrolopesm/scheme/engine"
-	"github.com/leandrolopesm/scheme/util"
+	. "github.com/leandrolopesm/eunuch/core"
+	. "github.com/leandrolopesm/eunuch/engine"
+	"github.com/leandrolopesm/eunuch/util"
 )
 
 func OrdOp(kind rune) BuiltinExec {

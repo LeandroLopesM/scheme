@@ -1,7 +1,7 @@
-# scheme
+# Eunuch
 A scheme interpreter written in Go.
 
 ## USAGE
 ```
-scheme [file.scm]
+eunuch [file.scm]
 ```

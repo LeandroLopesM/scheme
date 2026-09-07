@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	log "github.com/charmbracelet/log"
-	"github.com/leandrolopesm/scheme/builtin"
-	"github.com/leandrolopesm/scheme/core"
-	"github.com/leandrolopesm/scheme/engine"
-	"github.com/leandrolopesm/scheme/util"
+	"github.com/leandrolopesm/eunuch/builtin"
+	"github.com/leandrolopesm/eunuch/core"
+	"github.com/leandrolopesm/eunuch/engine"
+	"github.com/leandrolopesm/eunuch/util"
 
 	aurora "github.com/logrusorgru/aurora/v4"
 

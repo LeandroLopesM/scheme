@@ -3,9 +3,9 @@ package builtin
 import (
 	"unicode"
 
-	. "github.com/leandrolopesm/scheme/core"
-	. "github.com/leandrolopesm/scheme/engine"
-	"github.com/leandrolopesm/scheme/util"
+	. "github.com/leandrolopesm/eunuch/core"
+	. "github.com/leandrolopesm/eunuch/engine"
+	"github.com/leandrolopesm/eunuch/util"
 )
 
 func charOp(op string) BuiltinExec {

@@ -1,4 +1,4 @@
-module github.com/leandrolopesm/scheme
+module github.com/leandrolopesm/eunuch
 
 go 1.27.0
 
