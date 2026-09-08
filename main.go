@@ -36,7 +36,7 @@ func main() {
 				log.Errorf("Failed to read input: %s", err)
 			} else {
 				if err := lispEngine.ExecuteStr(text); err != nil {
-					fmt.Print(aurora.Red("Execution failed:"), "\n", err)
+					fmt.Print(aurora.Red("Execution failed:\n"), err)
 				}
 
 				if v, e := lispEngine.Pop(); e == nil { // If the last call pushed a value, print it
@@ -49,6 +49,10 @@ func main() {
 			if err := lispEngine.ExecuteFile(file); err != nil {
 				fmt.Print(aurora.Red("Execution failed:"), "\n", err)
 			}
+		}
+
+		if v, e := lispEngine.Pop(); e == nil { // If the last call pushed a value, print it
+			fmt.Printf("\n;; %v", core.SprintUnit(v))
 		}
 	}
 }

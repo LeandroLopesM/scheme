@@ -53,7 +53,8 @@ start:
 	if err == nil {
 		switch curr {
 		case ';':
-			lex.skipComment()
+			lex.skipComment();
+			goto start
 		case '\n':
 			lex.iter.Consume()
 			lex.line++
@@ -128,6 +129,11 @@ func (lex *Lexer) parseScheme() (Unit, error) {
 	lex.iter.Consume() // Discard (
 	out := Scheme {
 		Name: lex.parseSymbol().Value.(string),
+		Position: Position{
+			Line: lex.line,
+			Char: lex.iter.Tell() - lex.lastLineOff,
+			File: lex.file,
+		},
 	}
 
 	_, err := lex.iter.Curr()
@@ -256,14 +262,16 @@ func isIdentChar(char rune) bool {
 
 func (lex *Lexer) skipComment() {
 	curr, err := lex.iter.Curr()
+	var buff []rune
 	for err == nil {
 		if curr, err = lex.iter.Next(); err != nil {
 			return;
 		} else {
 			if curr == '\n' {
-				_,_ = lex.iter.Prev()
 				return;
 			}
+
+			buff = append(buff, curr)
 		}
 	}
 }

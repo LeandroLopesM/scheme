@@ -46,7 +46,6 @@ const (
 	None
 	Any
 	Number
-	StrVar
 )
 
 func (tf Type) Matches(ty Type) bool {
@@ -55,8 +54,6 @@ func (tf Type) Matches(ty Type) bool {
 		return true
 	case Number:
 		return ty == Integer || ty == Float
-	case StrVar:
-		return ty == String || ty == Symbol
 	default:
 		return ty == Type(tf)
 	}

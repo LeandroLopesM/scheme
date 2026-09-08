@@ -9,7 +9,6 @@ import (
 	"github.com/charmbracelet/log"
 	. "github.com/leandrolopesm/eunuch/core"
 	"github.com/leandrolopesm/eunuch/parser"
-	"github.com/leandrolopesm/eunuch/util"
 	"github.com/logrusorgru/aurora/v4"
 )
 
@@ -85,14 +84,28 @@ func (self *Engine) ExecuteStr(code string) error {
 		}
 	}
 
-	for _, scheme := range schemes {
-		if err := self.checkScheme(scheme.Value.(Scheme)); err != nil {
+	for _, expr := range schemes {
+		if err := self.evalExpr(expr); err != nil {
 			return formatStackTrace(err)
 		}
+	}
 
-		if err := self.runScheme(scheme.Value.(Scheme)); err != nil {
-			return formatStackTrace(err)
+	return nil
+}
+
+func (self *Engine) evalExpr(unit Unit) error {
+	switch unit.Type {
+	case SchemeType: return self.runScheme(unit.Value.(Scheme))
+	case Symbol:
+		if val, err := self.GetVar(unit.Value.(string)); err != nil {
+			return err
+		} else {
+			self.Push(val)
 		}
+	case Integer, Float , Bool , String , Char, Vector, Pair:
+		self.Push(unit)
+	default:
+		panic(fmt.Sprintf("Unknown unit type %d", unit.Type))
 	}
 
 	return nil
@@ -162,26 +175,18 @@ func (self *Engine) checkScheme(scheme Scheme) error {
 }
 
 func (self *Engine) runScheme(scheme Scheme) error {
+	if err := self.checkScheme(scheme); err != nil {
+		return err
+	}
+
 	fn := self.funcs[scheme.Name] // Function must exist (Already checked with checkScheme)
 	self.saveStack()
 
 	for i, arg := range scheme.Args {
-		switch arg.Type {
-		case SchemeType:
-			if err := self.runScheme(arg.Value.(Scheme)); err != nil {
-				return fmt.Errorf("%s %s|%v", scheme.Position.ToString(), scheme.Name, err)
-			}
-		case Symbol:
-			fnArgIdx := util.If(fn.VarArgs, 0, i)
-
-			if !fn.Args[fnArgIdx].Matches(Symbol) || fn.Args[fnArgIdx] == Any { // Any is shorthand for anything OTHER THAN Symbol
-				v,_ := self.GetVar(arg.Value.(string))
-				self.Push(v)
-			} else {
-				self.Push(arg)
-			}
-		default:
+		if arg.Type == Symbol && fn.Args[i] == Symbol {
 			self.Push(arg)
+		} else {
+			self.evalExpr(arg)
 		}
 	}
 
